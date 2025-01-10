@@ -1,8 +1,10 @@
-const express = require('express');
-const axios = require('axios');
+import express from 'express';
+import axios from 'axios';
+
 const router = express.Router();
 
 router.post('/kakao', async (req, res) => {
+    console.log('Request body:', req.body); // 요청 데이터 확인
     const { code } = req.body;
 
     try {
@@ -22,4 +24,4 @@ router.post('/kakao', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;
