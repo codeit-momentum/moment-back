@@ -16,5 +16,8 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 app.use('/auth', authRoutes);
 
+console.log('Current Environment:', process.env.NODE_ENV);
+console.log('Redirect URI:', process.env.REDIRECT_URI);
+console.log('REST_API_KEY:', process.env.REST_API_KEY);
 
 export default app;

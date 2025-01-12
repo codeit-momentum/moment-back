@@ -1,2 +1,4 @@
 .env*
 package-lock.json
+.env.development
+.env.production
