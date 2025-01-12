@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-
+import { generateAccessToken, generateRefreshToken } from './jwtControllers.js';
 import axios from 'axios';
 
 const prisma = new PrismaClient();
@@ -68,14 +68,15 @@ export const getKakaoUser = async (accessToken) => {
         console.error('카카오 사용자 정보 요청 실패:', error.response?.data || error.message);
         throw new Error('Failed to retrieve user info');
     }
-}
+};
 
-// 카카오 사용자 처리 (데이터베이스 저장/조회)
+// 카카오 사용자 처리 (데이터베이스 저장/조회) + (JWT 토큰 발급급)
 export const handleKakaoUser = async (req, res) => {
-    const { accessToken } = req.body; // 클라이언트에서 받은 액세스 토큰
+    const { kakaoAccessToken } = req.body; // 클라이언트에서 받은 액세스 토큰
 
     try {
-        const userInfo = await getKakaoUser(accessToken);
+        // 카카오 사용자 정보 가져오기기
+        const userInfo = await getKakaoUser(kakaoAccessToken);
 
         const { id: kakaoId, kakao_account } = userInfo; // 카카오 사용자 ID 및 계정 정보
         //const email = kakao_account.email;
@@ -88,15 +89,29 @@ export const handleKakaoUser = async (req, res) => {
             user = await prisma.user.create({
                 data: {
                     email, // 사용자 이메일일
-                    kakaoId: kakaoId.toString(), // 카카오 ID => 문자열열
+                    kakaoId: kakaoId.toString(), // 카카오 ID => 문자열
                 },
             });
         }
 
-        // 사용자 정보 반환환
-        res.json({ user });
+        // JWT 토큰 생성
+        const accessToken = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
+
+        // Refresh Token을 HttpOnly 쿠키에 저장
+        res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: false, sameSite: 'strict' });
+
+        // 사용자 정보 + JWT 토큰 반환
+        res.json({ 
+            user: {
+                id: user.id,
+                email: user.email,
+                kakaoId: user.kakaoId,
+            },
+            accessToken
+        });
     } catch (error) {
         console.error('사용자 처리 실패:', error.message);
         res.status(500).send('Failed to process user');
     }
-}
+};
