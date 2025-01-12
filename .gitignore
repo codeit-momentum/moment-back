@@ -1,4 +1,4 @@
 node_modules/
 https/
-.env
+.env*
 package-lock.json
