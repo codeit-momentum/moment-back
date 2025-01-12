@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 
 import axios from 'axios';
+import 'dotenv-flow/config';
 
 const prisma = new PrismaClient();
 
