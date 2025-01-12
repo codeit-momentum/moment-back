@@ -1,9 +1,10 @@
 import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import 'dotenv-flow/config';
 import express from 'express';
 import authRoutes from './routes/authRoutes.js';
-import cookieParser from 'cookie-parser';
 
 dotenv.config({override: true});
 
