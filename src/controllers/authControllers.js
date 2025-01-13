@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const prisma = new PrismaClient();
 
-router.post('/kakao', async (req, res) => {
+export const kakaoLogin = async (req, res) => {
     console.log('Request body:', req.body); // 요청 데이터 확인
     const { code } = req.body;
 
@@ -18,9 +18,14 @@ router.post('/kakao', async (req, res) => {
         },
     });
 
+    let user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+        user = await prisma.user.create({ data: { email } });
+    }
+
         res.json(response.data);
     } catch (error) {
         console.error(error.response.data);
         res.status(500).send('Token request failed');
     }
-});
+};
