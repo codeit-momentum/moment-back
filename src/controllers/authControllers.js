@@ -39,14 +39,7 @@ export const kakaoLogin = async (req, res) => {
 
         const { access_token } = response.data;
 
-        /*
-        let user = await prisma.user.findUnique({ where: { email } });
-        if (!user) {
-            user = await prisma.user.create({ data: { email } });
-        }*/
-
         res.json({ access_token }); // 클라이언트로 액세스 토큰 반환
-        //res.json(response.data);
     } catch (error) {
         console.error("카카오 액세스 토큰 요청 실패: ", error.response?.data || error.message);
         res.status(500).send('Token request failed');
@@ -70,7 +63,18 @@ export const getKakaoUser = async (accessToken) => {
     }
 };
 
-// 카카오 사용자 처리 (데이터베이스 저장/조회) + (JWT 토큰 발급급)
+// 랜덤 4자리 문자열(대문자) + 4자리 숫자를 생성 
+const generateFriendCode = () => {
+    const randomLetters = Array.from({ length: 4 }, () => 
+        String.fromCharCode(65 + Math.floor(Math.random() * 26)) // A-Z
+    ).join('');
+    const randomNumbers = Array.from({ length: 4 }, () => 
+        Math.floor(Math.random() * 10) // 0-9
+    ).join('');
+    return `${randomLetters}${randomNumbers}`; // 조합된 코드 반환
+};
+
+// 카카오 사용자 처리 (데이터베이스 저장/조회) + (JWT 토큰 발급)
 export const handleKakaoUser = async (req, res) => {
     const { kakaoAccessToken } = req.body; // 클라이언트에서 받은 액세스 토큰
 
@@ -84,12 +88,22 @@ export const handleKakaoUser = async (req, res) => {
 
         // 데이터베이스에서 사용자 확인 또는 새 사용자 생성
         let user = await prisma.user.findUnique({ where: { email } });
+        
         if (!user) {
+            // 친구 코드 생성 (중복되지 않도록 반복 시도)
+            let friendCode;
+            while (true) {
+                friendCode = generateFriendCode(); // 랜덤 코드 생성
+                const existingUser = await prisma.user.findUnique({ where: { friendCode } });
+                if (!existingUser) break; // 고유 코드 확인
+            }
+
             // 사용자가 없으면 새로 생성
             user = await prisma.user.create({
                 data: {
                     email, // 사용자 이메일일
                     kakaoId: kakaoId.toString(), // 카카오 ID => 문자열
+                    friendCode, // 친구 코드
                 },
             });
         }
@@ -107,6 +121,7 @@ export const handleKakaoUser = async (req, res) => {
                 id: user.id,
                 email: user.email,
                 kakaoId: user.kakaoId,
+                friendCode: user.friendCode,
             },
             accessToken
         });
