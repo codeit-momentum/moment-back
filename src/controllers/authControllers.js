@@ -37,9 +37,23 @@ export const kakaoLogin = async (req, res) => {
             },
         });
 
-        const { access_token } = response.data;
+        const { 
+            token_type, 
+            access_token, 
+            expires_in, 
+            refresh_token,
+            refresh_token_expires_in,
+            scope,
+        } = response.data;
 
-        res.json({ access_token }); // 클라이언트로 액세스 토큰 반환
+        res.json({ 
+            token_type, 
+            access_token, 
+            expires_in, 
+            refresh_token,
+            refresh_token_expires_in,
+            scope,
+        }); // 클라이언트로 액세스 토큰, 리프래쉬 토큰큰 반환
     } catch (error) {
         console.error("카카오 액세스 토큰 요청 실패: ", error.response?.data || error.message);
         res.status(500).send('Token request failed');
