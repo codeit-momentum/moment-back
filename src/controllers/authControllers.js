@@ -82,9 +82,8 @@ export const handleKakaoUser = async (req, res) => {
         // 카카오 사용자 정보 가져오기기
         const userInfo = await getKakaoUser(kakaoAccessToken);
 
-        const { id: kakaoId, kakao_account } = userInfo; // 카카오 사용자 ID 및 계정 정보
-        //const email = kakao_account.email;
-        const email = "kangyeon9525@kakao.com"; // 임시 이메일 (테스트용)
+        const { id: userID, kakao_account } = userInfo; // 카카오 사용자 ID 및 계정 정보
+        const email = kakao_account.email;
 
         // 데이터베이스에서 사용자 확인 또는 새 사용자 생성
         let user = await prisma.user.findUnique({ where: { email } });
@@ -98,12 +97,20 @@ export const handleKakaoUser = async (req, res) => {
                 if (!existingUser) break; // 고유 코드 확인
             }
 
+            // 기본 닉네임 생성 (사용자의 이메일 @ 앞 부분을 따옴)
+            const nickname = email.split('@')[0]; // 이메일의 @ 앞부분 반환
+
+            // 기본 프로필 이미지 URL 설정
+            const defaultProfileImageUrl = "https://momentum-s3-bucket.s3.ap-northeast-2.amazonaws.com/profile/basic/free-icon-profile-4519729.png"; // 추후에 실제 기본 프로필 이미지로 변경 필요
+
             // 사용자가 없으면 새로 생성
             user = await prisma.user.create({
                 data: {
-                    email, // 사용자 이메일일
-                    kakaoId: kakaoId.toString(), // 카카오 ID => 문자열
+                    userID: userID.toString(), // 카카오 ID => 문자열
+                    email, // 사용자 이메일
+                    nickname, // 생성된 닉네임
                     friendCode, // 친구 코드
+                    profileImageUrl: defaultProfileImageUrl, // 기본 프로필 이미지
                 },
             });
         }
@@ -119,9 +126,11 @@ export const handleKakaoUser = async (req, res) => {
         res.json({ 
             user: {
                 id: user.id,
+                userID: user.userID,
                 email: user.email,
-                kakaoId: user.kakaoId,
+                nickname: user.nickname,
                 friendCode: user.friendCode,
+                profileImageUrl: user.profileImageUrl,
             },
             accessToken
         });

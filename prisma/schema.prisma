@@ -13,9 +13,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 model User {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
-  email       String    @unique
-  kakaoId     String    @unique
-  friendCode  String    @unique
-  createdAt   DateTime  @default(now())
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  userID          String    @unique
+  nickname        String    
+  email           String    @unique
+  profileImageUrl String?
+  friendCode      String    @unique
+  createdAt       DateTime  @default(now())
 }
