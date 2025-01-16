@@ -20,4 +20,5 @@ model User {
   profileImageUrl String?
   friendCode      String    @unique
   createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now())
 }

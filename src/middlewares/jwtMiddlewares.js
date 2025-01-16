@@ -15,7 +15,7 @@ export const jwtMiddleware = async (req, res, next) => {
     // Access Token 검증
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // 데이터베이스에서 사용자 확인인
+    // 데이터베이스에서 사용자 확인
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
     });
@@ -25,7 +25,14 @@ export const jwtMiddleware = async (req, res, next) => {
     }
 
     // 사용자 정보를 요청 객체에 추가
-    req.user = { userId: user.id, email: user.email };
+    req.user = { 
+      userId: user.id, 
+      userID: user.userID,
+      email: user.email,
+      nickname: user.nickname,
+      profileImageUrl: user.profileImageUrl,
+      friendCode: user.friendCode,
+    };
     next(); // 다음 미들웨어로 전달
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
