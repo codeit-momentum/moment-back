@@ -4,35 +4,34 @@ const prisma = new PrismaClient();
 
 // 사용자 친구 목록 조회
 export const getFriends = async (req, res) => {
+  const userID = req.user.userID;
+
   try {
     // 친구 목록 조회
     const friends = await prisma.friend.findMany({
       where: {
-        OR: [
-          { userID: req.user.userID }, // 사용자가 친구 관계의 주체인 경우
-          { friendUserID: req.user.userID }, // 사용자가 친구 관계의 대상인 경우
-        ],
+          userID: userID, // 사용자가 친구 관계의 주체인 경우
       },
       include: {
-        user: true, // 친구 관계의 주체 정보 포함
-        friendUser: true, // 친구 관계의 대상 정보 포함
+        friendUser: {
+          select: {
+            userID: true,
+            nickname: true,
+            profileImageUrl: true,
+          },
+        },
       },
     });
 
-    // 친구 목록 응답
-    const friendList = friends.map((friend) => {
-      const isCurrentUserPrimary = friend.userID === userId;
-      const friendInfo = isCurrentUserPrimary ? friend.friendUser : friend.user;
-
-      return {
-        userID: friendInfo.userID,
-        nickname: friendInfo.nickname,
-        profileImageUrl: friendInfo.profileImageUrl,
-        isFixed: friend.isFixed,
-        fixedAt: friend.fixedAt,
-        createdAt: friend.createdAt,
-      };
-    });
+    // 친구 목록 응답 데이터 변환
+    const friendList = friends.map((friend) => ({
+      userID: friend.friendUser.userID,
+      nickname: friend.friendUser.nickname,
+      profileImageUrl: friend.friendUser.profileImageUrl,
+      isFixed: friend.isFixed,
+      fixedAt: friend.fixedAt,
+      createdAt: friend.createdAt,
+    }));
 
     res.status(200).json({
       message: '친구 목록 조회 성공',
@@ -42,7 +41,7 @@ export const getFriends = async (req, res) => {
     console.error('친구 목록 조회 오류:', err.message);
     res.status(500).json({ message: '친구 목록 조회 중 오류가 발생했습니다.' });
   }
-}
+};
 
 // 사용자 친구 요청 전송
 export const addFriendRequest = async (req, res) => {
@@ -127,5 +126,169 @@ export const addFriendRequest = async (req, res) => {
   } catch (err) {
     console.error('친구 요청 전송 오류:', err.message);
     res.status(500).json({ message: '친구 요청 전송 중 오류가 발생했습니다.' });
+  }
+};
+
+// 사용자 친구 요청 목록 조회 (보낸 요청, 받은 요청)
+export const getFriendRequests = async (req, res) => {
+  const userID = req.user.userID;
+
+  try {
+    // 사용자가 받은 친구 요청
+    const receivedRequests = await prisma.friendRequest.findMany({
+      where: { 
+        receiverID: userID,
+        status: 'PENDING',
+      },
+      include: {
+        requester: {
+          select: {
+            userID: true,
+            nickname: true,
+            profileImageUrl: true,
+          },
+        },
+      },
+    });
+
+    // 사용자가 보낸 친구 요청 (PENDING 상태만)
+    const sentRequests = await prisma.friendRequest.findMany({
+      where: { 
+        requesterID: userID,
+        status: 'PENDING',
+      },
+      include: {
+        receiver: {
+          select: {
+            userID: true,
+            nickname: true,
+            profileImageUrl: true,
+          },
+        },
+      },
+    });
+
+    // 응답 데이터 형식 변환
+    const received = receivedRequests.map((request) => ({
+      id: request.id,
+      requesterID: request.requester.userID,
+      requesterNickname: request.requester.nickname,
+      requesterProfileImageUrl: request.requester.profileImageUrl,
+      status: request.status,
+      createdAt: request.createdAt,
+    }));
+
+    const sent = sentRequests.map((request) => ({
+      id: request.id,
+      receiverID: request.receiver.userID,
+      receiverNickname: request.receiver.nickname,
+      receiverProfileImageUrl: request.receiver.profileImageUrl,
+      status: request.status,
+      createdAt: request.createdAt,
+    }));
+
+    res.status(200).json({
+      message: '친구 요청 목록 조회 성공',
+      receivedRequests: received,
+      sentRequests: sent,
+    });
+  } catch (err) {
+    console.error('친구 요청 목록 조회 오류:', err.message);
+    res.status(500).json({ message: '친구 요청 목록 조회 중 오류가 발생했습니다.' });
+  }
+};
+
+// 친구 요청 수락/거절
+export const handleFriendRequest = async (req, res) => {
+  const { friendRequestID } = req.params; // 친구 요청 ID
+  const { status } = req.body; // 변경할 요청 상태 (ACCEPTED/REJECTED)
+  const userID = req.user.userID; // 현재 사용자 ID
+
+  if (!['ACCEPTED', 'REJECTED'].includes(status)) {
+    return res.status(400).json({ message: '잘못된 status값이 들어왔습니다.' });
+  }
+
+  try {
+    // 친구 요청 조회
+    const friendRequest = await prisma.friendRequest.findUnique({
+      where: { id: friendRequestID },
+      include: {
+        requester: {
+          select: {
+            userID: true,
+            nickname: true,
+            profileImageUrl: true,
+          },
+        },
+        receiver: {
+          select: {
+            userID: true,
+            nickname: true,
+            profileImageUrl: true,
+          },
+        },
+      },
+    });
+
+    if (!friendRequest) {
+      return res.status(404).json({ message: '해당 친구 요청을 찾을 수 없습니다.' });
+    }
+
+    if (friendRequest.receiverID !== userID) {
+      return res.status(403).json({ message: '이 친구 요청을 처리할 권한이 없습니다.' });
+    }
+
+    if (status === 'ACCEPTED') {
+      // 친구 요청 수락 처리
+      await prisma.friendRequest.update({
+        where: { id: friendRequestID },
+        data: { status: 'ACCEPTED' },
+      });
+
+      // 친구 관계 추가
+      await prisma.friend.createMany({
+        data: [
+          {
+            userID: friendRequest.requester.userID,
+            friendUserID: friendRequest.receiver.userID,
+          },
+          {
+            userID: friendRequest.receiver.userID,
+            friendUserID: friendRequest.requester.userID,
+          },
+        ],
+      });
+
+      return res.status(200).json({
+        message: '친구 요청을 성공적으로 받았습니다.',
+        friendRequest: {
+          friendRequestID: friendRequest.id,
+          userID: friendRequest.requester.userID,
+          friendID: friendRequest.receiver.userID,
+          status: 'ACCEPTED',
+          createdAt: friendRequest.createdAt,
+        },
+      });
+    } else if (status === 'REJECTED') {
+      // 친구 요청 거절 처리
+      await prisma.friendRequest.update({
+        where: { id: friendRequestID },
+        data: { status: 'REJECTED' },
+      });
+
+      return res.status(200).json({
+        message: '친구 요청을 성공적으로 거절했습니다.',
+        friendRequest: {
+          friendRequestID: friendRequest.id,
+          userID: friendRequest.requester.userID,
+          friendID: friendRequest.receiver.userID,
+          status: 'REJECTED',
+          createdAt: friendRequest.createdAt,
+        },
+      });
+    }
+  } catch (err) {
+    console.error('친구 요청 처리 오류:', err.message);
+    res.status(500).json({ message: '친구 요청 처리 중 오류가 발생했습니다.' });
   }
 };
