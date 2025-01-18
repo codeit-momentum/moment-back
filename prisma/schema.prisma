@@ -54,9 +54,10 @@ model Friend {
   userID       String // 사용자(userID) 참조
   friendUserID String // 친구(userID) 참조
   isFixed      Boolean   @default(false) // 친구 목록에서 고정 여부
+  isKnock      Boolean   @default(false)
   fixedAt      DateTime? 
+  knockedAt    DateTime? 
   createdAt    DateTime  @default(now())
-
   user         User      @relation("UserFriend", fields: [userID], references: [userID]) // 친구 관계의 주체
   friendUser   User      @relation("FriendUser", fields: [friendUserID], references: [userID]) // 친구 관계의 대상
 

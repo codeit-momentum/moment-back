@@ -292,3 +292,38 @@ export const handleFriendRequest = async (req, res) => {
     res.status(500).json({ message: '친구 요청 처리 중 오류가 발생했습니다.' });
   }
 };
+
+// 친구 삭제
+export const deleteFriend = async (req, res) => {
+  const userID = req.user.userID; // 현재 사용자 ID
+  const { friendUserID } = req.body; // 삭제할 친구의 사용자 ID
+
+  try {
+    const friendRelation = await prisma.friend.findMany({
+      where: {
+        OR: [
+          { userID, friendUserID },
+          { userID: friendUserID, friendUserID: userID },
+        ],
+      },
+    });
+
+    if (friendRelation.length === 0) {
+      return res.status(404).json({ message: '친구 관계가 존재하지 않습니다.' });
+    }
+
+    await prisma.friend.deleteMany({
+      where: {
+        OR: [
+          { userID, friendUserID },
+          { userID: friendUserID, friendUserID: userID },
+        ],
+      },
+    });
+
+    res.status(200).json({ message: '친구 관계를 성공적으로 삭제하였습니다.' });
+  } catch (err) {
+    console.error('친구 삭제 오류:', err.message);
+    res.status(500).json({ message: '친구 삭제 중 오류가 발생했습니다.' });
+  }
+};
