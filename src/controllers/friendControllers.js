@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
-
+import moment from 'moment';
 const prisma = new PrismaClient();
+
 
 // 사용자 친구 목록 조회
 export const getFriends = async (req, res) => {
@@ -325,5 +326,63 @@ export const deleteFriend = async (req, res) => {
   } catch (err) {
     console.error('친구 삭제 오류:', err.message);
     res.status(500).json({ message: '친구 삭제 중 오류가 발생했습니다.' });
+  }
+};
+
+//친구에게 노크하기
+export const knockFriend = async (req, res) => {
+  const userID = req.user.userID; // 현재 사용자 ID
+  const { friendId } = req.body; // 노크할 친구의 사용자 ID
+
+  try {
+    // 친구 관계 검색
+    const friendRelation = await prisma.friend.findUnique({
+      where: {
+        userID_friendUserID: {
+          userID,
+          friendUserID: friendId
+        }
+      },
+      include: {
+        friendUser: {
+          include: {
+            feed: true // 친구의 피드 정보 포함
+          }
+        }
+      }
+    });
+
+    // 존재하지 않는 친구 ID 검증
+    if (!friendRelation) {
+      return res.status(404).json({ status: "failed", message: "해당 친구를 찾을 수 없습니다." });
+    }
+
+    // 친구가 최근 7일 이내에 피드를 올렸는지 확인
+    const lastWeek = moment().subtract(7, 'days').toDate();
+    if (friendRelation.friendUser.feed.some(feed => moment(feed.createdAt).isSameOrAfter(lastWeek))) {
+      return res.status(403).json({ status: "failed", message: "해당 친구는 최근 7일 이내에 피드를 올렸습니다." });
+    }
+
+    // 주별 노크 제한 검사
+    const now = new Date();
+    const startOfWeek = moment().startOf('isoWeek').toDate();
+    if (friendRelation.knockedAt && moment(friendRelation.knockedAt).isSameOrAfter(startOfWeek)) {
+      return res.status(403).json({ status: "failed", message: "노크는 일주일에 한 번만 가능합니다." });
+    }
+
+    // 노크 상태 업데이트
+    await prisma.friend.update({
+      where: {
+        id: friendRelation.id
+      },
+      data: {
+        knockedAt: now
+      }
+    });
+
+    res.status(200).json({ status: "success", message: "노크 알림이 전송되었습니다." });
+  } catch (err) {
+    console.error('노크 오류:', err.message);
+    res.status(500).json({ status: "error", message: "서버에서 문제가 발생했습니다. 잠시 후 다시 시도해주시길 바랍니다." });
   }
 };
