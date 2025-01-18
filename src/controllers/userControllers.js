@@ -27,6 +27,29 @@ export const getCurrentUser = async (req, res) => {
   }
 };
 
+// 현재 사용자 친구 코드 조회
+export const getUserFriendCode = async (req, res) => {
+  try {
+    // 현재 요청한 유저 정보 조회
+    const currentUser = await prisma.user.findUnique({
+      where: { userID: req.user.userID },
+    });
+
+    if (!currentUser) { // 현재 사용자가 없는 경우
+      return res.status(404).json({ message: '현재 사용자를 찾을 수 없습니다.' });
+    }
+
+    // 사용자 정보 반환
+    res.status(200).json({
+      message: '사용자의 친구 코드 접근 성공',
+      friendCode: currentUser.friendCode 
+    });
+  } catch (err) {
+    console.error('getUserFriendCode 오류:', err.message);
+    res.status(500).json({ message: '사용자의 친구 코드를 가져오는 데 실패했습니다.' });
+  }
+};
+
 // 사용자 닉네임 업데이트
 export const updateNickname = async (req, res) => {
   try {
@@ -44,6 +67,12 @@ export const updateNickname = async (req, res) => {
     const updatedUser = await prisma.user.update({
       where: { userID: req.user.userID },
       data: { nickname: newNickname },
+      select: {
+        userID: true,
+        nickname: true,
+        email: true,
+        profileImageUrl: true,
+      },
     });
 
     res.status(200).json({
