@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import moment from 'moment';
+import cron from 'node-cron';
 const prisma = new PrismaClient();
 
 
@@ -329,37 +330,42 @@ export const deleteFriend = async (req, res) => {
   }
 };
 
+cron.schedule('0 0 * * 1', async () => {
+  console.log('Resetting knockedAt for all friends...');
+  await prisma.friend.updateMany({
+    data: {
+      knockedAt: null,
+      isKnock: false
+    }
+  });
+  console.log('All knockedAt fields have been reset.');
+});
+
 //친구에게 노크하기
 export const knockFriend = async (req, res) => {
   const userID = req.user.userID; // 현재 사용자 ID
-  const { friendId } = req.body; // 노크할 친구의 사용자 ID
+  const { friendUserID } = req.body; // 노크할 친구의 사용자 ID
 
   try {
-    // 친구 관계 검색
+    // 친구 관계 및 최근 피드 정보 검색
     const friendRelation = await prisma.friend.findUnique({
       where: {
         userID_friendUserID: {
           userID,
-          friendUserID: friendId
+          friendUserID
         }
       },
       include: {
-        friendUser: {
-          include: {
-            feed: true // 친구의 피드 정보 포함
-          }
-        }
+        friendUser: true,
       }
     });
 
-    // 존재하지 않는 친구 ID 검증
     if (!friendRelation) {
       return res.status(404).json({ status: "failed", message: "해당 친구를 찾을 수 없습니다." });
     }
 
     // 친구가 최근 7일 이내에 피드를 올렸는지 확인
-    const lastWeek = moment().subtract(7, 'days').toDate();
-    if (friendRelation.friendUser.feed.some(feed => moment(feed.createdAt).isSameOrAfter(lastWeek))) {
+    if (friendRelation.friendUser.feeds && friendRelation.friendUser.feeds.some(feed => moment(feed.createdAt).isAfter(moment().subtract(7, 'days')))) {
       return res.status(403).json({ status: "failed", message: "해당 친구는 최근 7일 이내에 피드를 올렸습니다." });
     }
 
@@ -376,7 +382,8 @@ export const knockFriend = async (req, res) => {
         id: friendRelation.id
       },
       data: {
-        knockedAt: now
+        knockedAt: now,
+        isKnock: true
       }
     });
 

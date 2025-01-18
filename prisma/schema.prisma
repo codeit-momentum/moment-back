@@ -27,6 +27,7 @@ model User {
 
   Friends          Friend[]        @relation("UserFriend") // 사용자가 추가한 친구 목록
   FriendUsers      Friend[]        @relation("FriendUser") // 사용자를 친구로 추가한 사용자 목록
+  feeds            Feed[]          @relation("UserFeeds")
 }
 
 model FriendRequest {
@@ -39,7 +40,6 @@ model FriendRequest {
 
   requester   User      @relation("Requester", fields: [requesterID], references: [userID]) // 요청 보낸 사용자
   receiver    User      @relation("Receiver", fields: [receiverID], references: [userID]) // 요청 받은 사용자
-
   @@unique([requesterID, receiverID]) // 동일한 사용자 간의 중복 요청 방지
 }
 
@@ -61,5 +61,22 @@ model Friend {
   user         User      @relation("UserFriend", fields: [userID], references: [userID]) // 친구 관계의 주체
   friendUser   User      @relation("FriendUser", fields: [friendUserID], references: [userID]) // 친구 관계의 대상
 
-  @@unique([userID, friendUserID]) // 동일한 사용자 간 중복 친구 관계 방지
+  @@unique([userID, friendUserID], name: "userID_friendUserID") // 동일한 사용자 간 중복 친구 관계 방지
 }
+
+model Feed {
+  feedID    String   @id @default(auto()) @map("_id") @db.ObjectId
+  userID    String   // 사용자 ID 참조
+  content   String
+  createdAt DateTime @default(now())
+  user      User     @relation("UserFeeds", fields: [userID], references: [userID])
+}
+
+model FriendFeed {
+  friendFeedId String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @db.ObjectId // 피드를 보는 사용자 ID
+  feedId       String   @db.ObjectId // 친구의 피드 ID
+  createdAt    DateTime @default(now()) // 연결이 생성된 시각
+
+}
+
