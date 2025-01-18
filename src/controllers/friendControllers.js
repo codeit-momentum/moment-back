@@ -356,7 +356,11 @@ export const knockFriend = async (req, res) => {
         }
       },
       include: {
-        friendUser: true,
+        friendUser: {
+          include: {
+            feeds: true  // 피드 정보 포함
+          },
+        },
       }
     });
 
@@ -364,7 +368,7 @@ export const knockFriend = async (req, res) => {
       return res.status(404).json({ status: "failed", message: "해당 친구를 찾을 수 없습니다." });
     }
 
-    // 친구가 최근 7일 이내에 피드를 올렸는지 확인
+    // 친구가 최근 7일 이내에 피드를 올렸는지 확인  -> 내부 확인용
     if (friendRelation.friendUser.feeds && friendRelation.friendUser.feeds.some(feed => moment(feed.createdAt).isAfter(moment().subtract(7, 'days')))) {
       return res.status(403).json({ status: "failed", message: "해당 친구는 최근 7일 이내에 피드를 올렸습니다." });
     }
