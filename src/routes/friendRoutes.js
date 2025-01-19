@@ -1,6 +1,6 @@
 import express from 'express';
+import { addFriendRequest, deleteFriend, getFriendRequests, getFriends, handleFriendRequest, knockFriend } from '../controllers/friendControllers.js';
 import { jwtMiddleware } from '../middlewares/jwtMiddlewares.js';
-import { addFriendRequest, getFriendRequests, getFriends, handleFriendRequest } from '../controllers/friendControllers.js';
 
 const router = express.Router();
 
@@ -13,5 +13,6 @@ router.get('/', getFriends); // 친구 목록 조회
 router.post('/', addFriendRequest); // 친구 추가
 router.get('/requests', getFriendRequests); // 친구 요청 목록 조회
 router.patch('/requests/:friendRequestID', handleFriendRequest); // 친구 요청 수락/거절
-
+router.delete('/', deleteFriend);
+router.post('/knock', knockFriend);
 export default router;
