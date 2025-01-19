@@ -364,7 +364,7 @@ cron.schedule('0 0 * * 1', async () => {
 
 //친구에게 노크하기
 export const knockFriend = async (req, res) => {
-  const userID = req.user.userID; // 현재 사용자 ID
+  const userID = req.user.userId; // 현재 사용자 ID
   const { friendUserID } = req.body; // 노크할 친구의 사용자 ID
 
   try {
@@ -418,3 +418,48 @@ export const knockFriend = async (req, res) => {
     res.status(500).json({ status: "error", message: "서버에서 문제가 발생했습니다. 잠시 후 다시 시도해주시길 바랍니다." });
   }
 };
+
+
+//친구 피드 응원하기
+export const cheerOnFriendFeed = async (req, res) => {
+  const userId = req.user.userId; // 이 부분에서 userId가 제대로 설정되어야 합니다.
+  const feedId = req.params.feedId;
+
+  if (!userId) {
+    return res.status(400).json({ message: "User ID is missing in the request" });
+  }
+
+  try {
+    const existingCheer = await prisma.friendFeed.findUnique({
+      where: {
+        userID_friendUserID: userId,
+        feedId: feedId
+      }
+    });
+
+    if (existingCheer && existingCheer.cheer) {
+      return res.status(409).json({ message: "이미 이 피드를 응원했습니다." });
+    }
+
+    const updatedCheer = await prisma.friendFeed.upsert({
+      where: {
+        userID: userId,
+        feedId: feedId
+      },
+      update: {
+        isCheer: true
+      },
+      create: {
+        userID: userId,
+        feedId: feedId,
+        isCheer: true
+      }
+    });
+
+    res.status(200).json({ message: "피드 응원에 성공했습니다.", data: updatedCheer });
+  } catch (err) {
+    console.error('피드 응원 오류:', err);
+    res.status(500).json({ message: "서버 오류가 발생했습니다." });
+  }
+};
+  
