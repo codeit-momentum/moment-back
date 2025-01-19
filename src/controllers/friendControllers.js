@@ -79,12 +79,12 @@ export const addFriendRequest = async (req, res) => {
     });
 
     // 기존 친구 요청 또는 친구 관계 상태 확인
-    const existingRequest = await prisma.friendRequest.findUnique({
+    const existingRequest = await prisma.friendRequest.findFirst({
       where: {
-        requesterID_receiverID: {
-          requesterID,
-          receiverID,
-        },
+        OR: [
+          { requesterID, receiverID }, // A -> B 요청 확인
+          { requesterID: receiverID, receiverID: requesterID }, // B -> A 요청 확인
+        ],
       },
     });
 
@@ -100,6 +100,11 @@ export const addFriendRequest = async (req, res) => {
       if (existingRequest.status === 'REJECTED') {
         return res.status(409).json({
           message: '상대방으로부터 친구 요청 거절 당했습니다.',
+        });
+      }
+      if (existingRequest.status === 'DELETED') {
+        return res.status(409).json({
+          message: '친구 삭제되었으므로 재친추는 불가합니다.',
         });
       }
     }
@@ -301,6 +306,7 @@ export const deleteFriend = async (req, res) => {
   const { friendUserID } = req.body; // 삭제할 친구의 사용자 ID
 
   try {
+    // 친구 관계 확인
     const friendRelation = await prisma.friend.findMany({
       where: {
         OR: [
@@ -314,6 +320,21 @@ export const deleteFriend = async (req, res) => {
       return res.status(404).json({ message: '친구 관계가 존재하지 않습니다.' });
     }
 
+    // FriendRequest의 status를 DELETED로 업데이트
+    await prisma.friendRequest.updateMany({
+      where: {
+        OR: [
+          { requesterID: userID, receiverID: friendUserID },
+          { requesterID: friendUserID, receiverID: userID },
+        ],
+      },
+      data: {
+        status: 'DELETED',
+        updatedAt: new Date(),
+      },
+    });
+
+    // Friend 관계 삭제 
     await prisma.friend.deleteMany({
       where: {
         OR: [

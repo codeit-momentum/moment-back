@@ -47,6 +47,7 @@ enum FriendRequestStatus {
   PENDING // 요청 대기 상태
   ACCEPTED // 요청 수락 상태
   DECLINED // 요청 거절 상태
+  DELETED // 친구 삭제된 상태
 }
 
 model Friend {
@@ -77,6 +78,5 @@ model FriendFeed {
   userId       String   @db.ObjectId // 피드를 보는 사용자 ID
   feedId       String   @db.ObjectId // 친구의 피드 ID
   createdAt    DateTime @default(now()) // 연결이 생성된 시각
-
 }
 
