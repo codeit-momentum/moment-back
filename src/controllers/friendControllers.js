@@ -364,7 +364,7 @@ cron.schedule('0 0 * * 1', async () => {
 
 //친구에게 노크하기
 export const knockFriend = async (req, res) => {
-  const userID = req.user.userId; // 현재 사용자 ID
+  const userID = req.user.userID; // 현재 사용자 ID
   const { friendUserID } = req.body; // 노크할 친구의 사용자 ID
 
   try {
@@ -420,20 +420,17 @@ export const knockFriend = async (req, res) => {
 };
 
 
-//친구 피드 응원하기
 export const cheerOnFriendFeed = async (req, res) => {
-  const userId = req.user.userId; // 이 부분에서 userId가 제대로 설정되어야 합니다.
-  const feedId = req.params.feedId;
-
-  if (!userId) {
-    return res.status(400).json({ message: "User ID is missing in the request" });
-  }
+  const userID = req.user.userId; // 인증된 사용자 ID, 토큰에서 추출
+  const feedID = req.params.feedId; // URL 파라미터로 받은 피드 ID
 
   try {
-    const existingCheer = await prisma.friendFeed.findUnique({
+    // 이미 해당 피드에 대해 응원했는지 확인
+    const existingCheer = await prisma.friendFeed.findFirst({
       where: {
-        userID_friendUserID: userId,
-        feedId: feedId
+        userID: userID,
+        feedID: feedID,
+        cheer: true  // 이미 응원된 상태를 찾습니다.
       }
     });
 
@@ -441,25 +438,18 @@ export const cheerOnFriendFeed = async (req, res) => {
       return res.status(409).json({ message: "이미 이 피드를 응원했습니다." });
     }
 
-    const updatedCheer = await prisma.friendFeed.upsert({
-      where: {
-        userID: userId,
-        feedId: feedId
-      },
-      update: {
-        isCheer: true
-      },
-      create: {
-        userID: userId,
-        feedId: feedId,
-        isCheer: true
+    // 응원 생성
+    const cheer = await prisma.friendFeed.create({
+      data: {
+        userID: userID,
+        feedID: feedID,
+        cheer: true
       }
     });
 
-    res.status(200).json({ message: "피드 응원에 성공했습니다.", data: updatedCheer });
+    res.status(200).json({ message: "피드 응원에 성공했습니다.", data: cheer });
   } catch (err) {
     console.error('피드 응원 오류:', err);
-    res.status(500).json({ message: "서버 오류가 발생했습니다." });
+    res.status(500).json({ message: "서버 오류가 발생했습니다. 잠시 후 다시 시도해주시길 바랍니다." });
   }
 };
-  
