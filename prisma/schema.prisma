@@ -75,8 +75,11 @@ model Feed {
 
 model FriendFeed {
   friendFeedId String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId       String   @db.ObjectId // 피드를 보는 사용자 ID
-  feedId       String   @db.ObjectId // 친구의 피드 ID
+  userID       String   @db.ObjectId // 피드를 보는 사용자 ID
+  feedID       String   @db.ObjectId // 친구의 피드 ID
+  cheer        Boolean  @default(false)
   createdAt    DateTime @default(now()) // 연결이 생성된 시각
+
+  @@unique([userID, feedID], name: "userID_feedID")
 }
 
