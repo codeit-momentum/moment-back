@@ -23,6 +23,11 @@ export const getFriends = async (req, res) => {
           },
         },
       },
+      orderBy: [
+        { isFixed: 'desc' }, // 고정된 친구가 먼저 오도록 정렬
+        { fixedAt: 'asc' }, // 고정된 친구들 내에서 고정된 시각 기준 오름차순 정렬
+        { createdAt: 'asc' }, // 나머지는 생성된 시각 기준 오름차순 정렬
+      ],
     });
 
     // 친구 목록 응답 데이터 변환
@@ -31,6 +36,7 @@ export const getFriends = async (req, res) => {
       nickname: friend.friendUser.nickname,
       profileImageUrl: friend.friendUser.profileImageUrl,
       isFixed: friend.isFixed,
+      isKnock: friend.isKnock,
       fixedAt: friend.fixedAt,
       createdAt: friend.createdAt,
     }));
@@ -223,7 +229,7 @@ export const knockFriend = async (req, res) => {
 
 // 친구에게 응원하기
 export const cheerOnFriendFeed = async (req, res) => {
-  const userID = req.user.userId; // 인증된 사용자 ID, 토큰에서 추출
+  const userID = req.user.userID; // 인증된 사용자 ID, 토큰에서 추출
   const feedID = req.params.feedId; // URL 파라미터로 받은 피드 ID
 
   try {
@@ -253,5 +259,55 @@ export const cheerOnFriendFeed = async (req, res) => {
   } catch (err) {
     console.error('피드 응원 오류:', err);
     res.status(500).json({ message: "서버 오류가 발생했습니다. 잠시 후 다시 시도해주시길 바랍니다." });
+  }
+};
+
+// 친구 고정/고정 해제
+export const toggleFriendFix = async (req, res) => {
+  const userID = req.user.userID; // 현재 사용자 ID
+  const { friendUserID } = req.body; // 고정할/고정 해제할 친구의 사용자 ID
+
+  try {
+    // 친구 관계 확인
+    const friendRelation = await prisma.friend.findUnique({
+      where: {
+        userID_friendUserID: {
+          userID,
+          friendUserID,
+        },
+      },
+    });
+
+    if (!friendRelation) {
+      return res.status(404).json({ message: '친구 관계가 존재하지 않습니다.' });
+    }
+
+    // 현재 고정 상태 반전
+    const updatedFriend = await prisma.friend.update({
+      where: {
+        id: friendRelation.id,
+      },
+      data: {
+        isFixed: !friendRelation.isFixed,
+        fixedAt: !friendRelation.isFixed ? new Date() : null, // 고정 시 현재 시각, 해제 시 null
+      },
+    });
+
+    const message = updatedFriend.isFixed
+      ? '친구가 고정되었습니다.'
+      : '친구 고정이 해제되었습니다.';
+
+    res.status(200).json({
+      message,
+      friend: {
+        userID: updatedFriend.userID,
+        friendUserID: updatedFriend.friendUserID,
+        isFixed: updatedFriend.isFixed,
+        fixedAt: updatedFriend.fixedAt,
+      },
+    });
+  } catch (err) {
+    console.error('친구 고정/고정 해제 오류:', err.message);
+    res.status(500).json({ message: '친구 고정/고정 해제 중 오류가 발생했습니다.' });
   }
 };

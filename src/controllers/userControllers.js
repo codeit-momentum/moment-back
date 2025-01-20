@@ -132,3 +132,31 @@ export const updateProfileImage = async (req, res) => {
     res.status(500).json({ message: '프로필 이미지 업데이트 중 오류가 발생했습니다.' });
   }
 }
+
+// 사용자 회원탈퇴
+export const deleteUser = async (req, res) => {
+  const userID = req.user.userID; // 요청한 사용자의 userID 가져오기
+
+  try {
+    // 현재 요청한 사용자 조회
+    const currentUser = await prisma.user.findUnique({
+      where: { userID },
+    });
+
+    if (!currentUser) {
+      return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+    }
+
+    // 사용자 삭제 (연관된 데이터 Cascade로 삭제제)
+    await prisma.user.delete({
+      where: { userID },
+    });
+
+    res.status(200).json({
+      message: '회원 탈퇴가 성공적으로 완료되었습니다.',
+    });
+  } catch (err) {
+    console.error('회원탈퇴 오류:', err.message);
+    res.status(500).json({ message: '회원탈퇴 중 오류가 발생했습니다.' });
+  }
+}
