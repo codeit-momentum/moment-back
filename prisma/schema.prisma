@@ -12,6 +12,7 @@ datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
+
 model User {
   id              String    @id @default(auto()) @map("_id") @db.ObjectId
   userID          String    @unique
@@ -22,32 +23,9 @@ model User {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @default(now())
 
-  FriendRequests  FriendRequest[] @relation("Requester") // 사용자가 보낸 친구 요청들
-  ReceivedRequests FriendRequest[] @relation("Receiver") // 사용자가 받은 친구 요청들
-
   Friends          Friend[]        @relation("UserFriend") // 사용자가 추가한 친구 목록
   FriendUsers      Friend[]        @relation("FriendUser") // 사용자를 친구로 추가한 사용자 목록
   feeds            Feed[]          @relation("UserFeeds")
-}
-
-model FriendRequest {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
-  requesterID String // 요청자(userID) 참조
-  receiverID  String // 요청 받은 사람(userID) 참조
-  status      FriendRequestStatus @default(PENDING) // 친구 요청 상태
-  createdAt   DateTime  @default(now()) 
-  updatedAt   DateTime  @default(now())
-
-  requester   User      @relation("Requester", fields: [requesterID], references: [userID]) // 요청 보낸 사용자
-  receiver    User      @relation("Receiver", fields: [receiverID], references: [userID]) // 요청 받은 사용자
-  @@unique([requesterID, receiverID]) // 동일한 사용자 간의 중복 요청 방지
-}
-
-enum FriendRequestStatus {
-  PENDING // 요청 대기 상태
-  ACCEPTED // 요청 수락 상태
-  DECLINED // 요청 거절 상태
-  DELETED // 친구 삭제된 상태
 }
 
 model Friend {
