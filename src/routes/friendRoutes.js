@@ -1,5 +1,5 @@
 import express from 'express';
-import { addFriend, cheerOnFriendFeed, deleteFriend, getFriends, knockFriend } from '../controllers/friendControllers.js';
+import { addFriend, cheerOnFriendFeed, deleteFriend, getFriends, knockFriend, toggleFriendFix } from '../controllers/friendControllers.js';
 import { jwtMiddleware } from '../middlewares/jwtMiddlewares.js';
 
 const router = express.Router();
@@ -14,5 +14,6 @@ router.post('/', addFriend); // 친구 추가
 router.delete('/', deleteFriend); // 친구 삭제제
 router.post('/knock', knockFriend); // 친구 노크하기
 router.post('/cheer/:feedId', cheerOnFriendFeed); // 친구 응원하기
+router.patch('/fixed', toggleFriendFix); // 친구 고정/고정 해제하기기
 
 export default router;
