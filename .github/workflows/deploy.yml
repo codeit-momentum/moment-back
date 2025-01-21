@@ -36,19 +36,10 @@ jobs:
       # 5. .env 파일 생성 및 Lightsail 서버로 업로드
       - name: Create and Upload .env files to Lightsail
         run: |
-          echo "${{ secrets.ENV_FILE }}" > .env
-          echo "${{ secrets.ENV_PRODUCTION_FILE }}" > .env.production
+          printf "%s\n" "${{ secrets.ENV_FILE }}" > .env
+          printf "%s\n" "${{ secrets.ENV_PRODUCTION_FILE }}" > .env.production
           ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_PUBLIC_IP }} "mkdir -p /home/ubuntu/my-app"
           scp .env .env.production ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_PUBLIC_IP }}:/home/ubuntu/my-app/
-      
-      # 6. Docker 이미지 빌드 및 Lightsail 서버로 전송
-      #- name: Build and Push Docker Image
-      #  env:
-      #    DOCKER_BUILDKIT: 1
-      #  run: |
-      #    IMAGE_TAG=$(date +'%Y%m%d%H%M%S')
-      #    docker build -t codeit-momentum:$IMAGE_TAG .
-      #    docker save codeit-momentum:$IMAGE_TAG | ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_PUBLIC_IP }} "docker load"
 
       # 6. Lightsail 서버로 나머지 파일 업로드
       - name: Upload Files to Lightsail
