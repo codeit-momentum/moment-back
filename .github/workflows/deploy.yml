@@ -36,8 +36,8 @@ jobs:
       # 5. .env 파일 생성
       - name: Create .env files
         run: |
-          echo "${{ secrets.ENV_FILE }}" > .env
-          echo "${{ secrets.ENV_PRODUCTION_FILE }}" > .env.production
+          printf "%s" "${{ secrets.ENV_FILE }}" > .env
+          printf "%s" "${{ secrets.ENV_PRODUCTION_FILE }}" > .env.production
 
       # 6. Docker 이미지 빌드 및 Lightsail 서버로 전송
       #- name: Build and Push Docker Image
