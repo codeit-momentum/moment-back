@@ -58,7 +58,7 @@ jobs:
       - name: Upload Files to Lightsail
         run: |
           ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_PUBLIC_IP }} "mkdir -p /home/ubuntu/my-app"
-          scp docker-compose.yml Dockerfile ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_PUBLIC_IP }}:/home/ubuntu/my-app/
+          scp -r ./* ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_PUBLIC_IP }}:/home/ubuntu/my-app/
 
       # 8. Lightsail 서버에서 Docker Compose 배포
       - name: Deploy on Lightsail
