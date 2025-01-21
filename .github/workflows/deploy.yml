@@ -33,6 +33,14 @@ jobs:
           echo "${{ secrets.SSH_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
+      # 5. .env 파일 생성 및 Lightsail 서버로 업로드
+      - name: Create and Upload .env files to Lightsail
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
+          echo "${{ secrets.ENV_PRODUCTION_FILE }}" > .env.production
+          ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_PUBLIC_IP }} "mkdir -p /home/ubuntu/my-app"
+          scp .env .env.production ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_PUBLIC_IP }}:/home/ubuntu/my-app/
+      
       # 6. Docker 이미지 빌드 및 Lightsail 서버로 전송
       #- name: Build and Push Docker Image
       #  env:
@@ -42,21 +50,11 @@ jobs:
       #    docker build -t codeit-momentum:$IMAGE_TAG .
       #    docker save codeit-momentum:$IMAGE_TAG | ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_PUBLIC_IP }} "docker load"
 
-      # 7. Lightsail 서버로 파일 업로드
+      # 6. Lightsail 서버로 나머지 파일 업로드
       - name: Upload Files to Lightsail
         run: |
-          ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_PUBLIC_IP }} "
-            mkdir -p /home/ubuntu/my-app &&
-            rm -f /home/ubuntu/my-app/.env /home/ubuntu/my-app/.env.production"
           scp -r ./* ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_PUBLIC_IP }}:/home/ubuntu/my-app/
-
-
-      # 5. .env 파일 생성
-      - name: Create .env files
-        run: |
-          printf "%s" "${{ secrets.ENV_FILE }}" > .env
-          printf "%s" "${{ secrets.ENV_PRODUCTION_FILE }}" > .env.production
-          
+      
       # 8. Lightsail 서버에서 Docker Compose 배포
       - name: Deploy on Lightsail
         run: |
