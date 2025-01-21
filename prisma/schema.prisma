@@ -31,6 +31,7 @@ model User {
   feeds         Feed[]         @relation("UserFeeds")
   moments       Moment[]       @relation("UserMoments") // 사용자가 추가한 모멘트 목록 
   notifications Notification[] @relation("UserNotifications") // 사용자 알람 목록 
+  bucket        Bucket[]       @relation("UserBuckets") // 사용자 추가한 버킷리스트 
 }
 
 model FriendRequest {
@@ -96,14 +97,16 @@ model Moment {
   complete    Boolean
   userID      String
   user        User     @relation("UserMoments", fields: [userID], references: [userID])
+  bucketID    String   @db.ObjectId
+  bucket      Bucket   @relation("BucketMoments", fields: [bucketID], references: [bucketID], onDelete: Cascade)
 }
 
 model Notification {
   notificationID String           @id @default(auto()) @map("_id") @db.ObjectId
   type           NotificationType @default(GENERAL)
   content        String
-  created_at     DateTime
-  read           Boolean          @default(false)
+  createdAt      DateTime
+  isRead         Boolean          @default(false)
   userID         String
   user           User             @relation("UserNotifications", fields: [userID], references: [userID])
 }
@@ -112,3 +115,18 @@ enum NotificationType {
   GENERAL // 기본값 
 }
 
+model Bucket {
+  bucketID  String     @id @default(auto()) @map("_id") @db.ObjectId
+  type      BucketType
+  content   String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime?  @updatedAt
+  moments   Moment[]   @relation("BucketMoments") 
+  userID    String 
+  user      User       @relation("UserBuckets", fields: [userID], references: [userID])
+}
+
+enum BucketType {
+  GOAL      // 달성형
+  RECURRING // 반복형 
+}
