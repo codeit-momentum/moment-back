@@ -10,6 +10,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      # 1. 리포지토리 체크아웃
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh/
@@ -25,7 +29,8 @@ jobs:
       - name: Build and Push Docker Image
         run: |
           IMAGE_TAG=$(date +'%Y%m%d%H%M%S')
-          docker build -t my-app:$IMAGE_TAG .
+          # Dockerfile 경로와 빌드 컨텍스트 확인
+          docker build -t my-app:$IMAGE_TAG -f ./Dockerfile . # Dockerfile 위치 명시
           ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_PUBLIC_IP }} \
             "docker load < $(docker save my-app:$IMAGE_TAG)"
 
