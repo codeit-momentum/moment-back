@@ -8,10 +8,11 @@ export const getHome = async (req, res) => {
     try {
       // 현재 사용자 조회
       const currentUser = await prisma.user.findUnique({
-        where: { userID: req.user.userID },
+        where: { userID: "2" },
       });
 
       if (!currentUser) { 
+        console.error("사용자 찾을 수 없음")
         return res.status(404).json({ 
           success: false,
           error: { code: 404, message: '현재 사용자를 찾을 수 없습니다.' }
@@ -20,7 +21,7 @@ export const getHome = async (req, res) => {
       
       // 사용자의 moments 조회 
       const moments = await prisma.moment.findMany({
-        where: { userID: req.user.userID },
+        where: { userID: "2" },
         orderBy: { date: 'desc' },
         select: {
           momentID: true,
@@ -36,7 +37,6 @@ export const getHome = async (req, res) => {
         messages: "성공적으로 조회 완료하였습니다.",
         user: currentUser.userID,
         moments: moments
-
       })
     } catch (err) {
       console.error('홈 조회 실패:', err.message);
@@ -52,7 +52,7 @@ export const getNotifications = async (req, res) => {
   try {
     // 현재 사용자 조회
     const currentUser = await prisma.user.findUnique({
-      where: { userID: req.user.userID },
+      where: { userID: "1" },
     });
 
     if (!currentUser) { 
@@ -64,22 +64,22 @@ export const getNotifications = async (req, res) => {
     
     // 사용자의 알림 조회 
     const notifications = await prisma.notification.findMany({
-      where: { userID: req.user.userID },
+      where: { userID: "1" },
       orderBy: { createdAt: 'desc' },
       select: {
         notificationID: true,
         type: true,
         content: true,
         createdAt: true,
-        read: true
+        isRead: true
       }
     });
 
     // 사용자의 새로운 알림 개수 표시 
     const newNotificationsCount = await prisma.notification.count({
       where: {
-        userID: req.user.userID,
-        read: false // 읽지 않은 알림만 조회
+        userID: "1",
+        isRead: false // 읽지 않은 알림만 조회
       }
     });
 
@@ -101,9 +101,10 @@ export const getNotifications = async (req, res) => {
 
 // 알림 읽음 처리 
 export const markNotificationAsRead = async (req, res) => {
+  const userID = "1";
+  const { notificationID } = req.params; 
+
   try {
-    const userID = req.user.userID;
-    const { notificationID } = req.params; 
 
     // 알림 조회 
     const notification = await prisma.notification.findUnique({
@@ -129,7 +130,7 @@ export const markNotificationAsRead = async (req, res) => {
     // 알림 읽음으로 업데이트 
     const updatedNotification = await prisma.notification.update({
       where: { notificationID: notificationID },
-      data: { read: true }
+      data: { isRead: true }
     });
 
     return res.status(200).json({
@@ -151,7 +152,7 @@ export const markNotificationAsRead = async (req, res) => {
 export const getCompletedMomentsByWeek = async (req, res) => {
   try {
     const { date } = req.body;
-    const userID = req.user.userID; 
+    const userID = "1"; 
 
     if (!date) {
       return res.status(400).json({
@@ -247,8 +248,7 @@ export const getCompletedMomentsByDay = async (req, res) => {
   }
 };
 
-
-// 버킷리스트 달성 현황 받아오기
+// 버킷리스트 달성 현황
 export const getBucketListStatus = async (req, res) => {
   try {
     const currentUser = req.user;
