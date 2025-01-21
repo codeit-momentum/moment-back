@@ -121,12 +121,12 @@ model Bucket {
   content   String
   createdAt DateTime   @default(now())
   updatedAt DateTime?  @updatedAt
-  moments   Moment[]   @relation("BucketMoments") 
-  userID    String 
+  moments   Moment[]   @relation("BucketMoments")
+  userID    String
   user      User       @relation("UserBuckets", fields: [userID], references: [userID])
 }
 
 enum BucketType {
-  GOAL      // 달성형
+  GOAL // 달성형
   RECURRING // 반복형 
 }
