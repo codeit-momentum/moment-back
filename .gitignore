@@ -1,3 +1,6 @@
 node_modules/
 https/
 .env
+.env.*
+.env.development
+.env.production

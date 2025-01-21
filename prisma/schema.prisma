@@ -12,7 +12,102 @@ datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
+
 model User {
-  id    String  @id @default(auto()) @map("_id") @db.ObjectId
-  email String  @unique
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userID          String   @unique
+  nickname        String
+  email           String   @unique
+  profileImageUrl String?
+  friendCode      String   @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now())
+
+  FriendRequests   FriendRequest[] @relation("Requester") // 사용자가 보낸 친구 요청들
+  ReceivedRequests FriendRequest[] @relation("Receiver") // 사용자가 받은 친구 요청들
+
+  Friends       Friend[]       @relation("UserFriend") // 사용자가 추가한 친구 목록
+  FriendUsers   Friend[]       @relation("FriendUser") // 사용자를 친구로 추가한 사용자 목록
+  feeds         Feed[]         @relation("UserFeeds")
+  moments       Moment[]       @relation("UserMoments") // 사용자가 추가한 모멘트 목록 
+  notifications Notification[] @relation("UserNotifications") // 사용자 알람 목록 
+}
+
+model FriendRequest {
+  id          String              @id @default(auto()) @map("_id") @db.ObjectId
+  requesterID String // 요청자(userID) 참조
+  receiverID  String // 요청 받은 사람(userID) 참조
+  status      FriendRequestStatus @default(PENDING) // 친구 요청 상태
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @default(now())
+
+  requester User @relation("Requester", fields: [requesterID], references: [userID]) // 요청 보낸 사용자
+  receiver  User @relation("Receiver", fields: [receiverID], references: [userID]) // 요청 받은 사용자
+
+  @@unique([requesterID, receiverID]) // 동일한 사용자 간의 중복 요청 방지
+}
+
+enum FriendRequestStatus {
+  PENDING // 요청 대기 상태
+  ACCEPTED // 요청 수락 상태
+  DECLINED // 요청 거절 상태
+  DELETED // 친구 삭제된 상태
+}
+
+model Friend {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  userID       String // 사용자(userID) 참조
+  friendUserID String // 친구(userID) 참조
+  isFixed      Boolean   @default(false) // 친구 목록에서 고정 여부
+  isKnock      Boolean   @default(false)
+  fixedAt      DateTime?
+  knockedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  user         User      @relation("UserFriend", fields: [userID], references: [userID]) // 친구 관계의 주체
+  friendUser   User      @relation("FriendUser", fields: [friendUserID], references: [userID]) // 친구 관계의 대상
+
+  @@unique([userID, friendUserID], name: "userID_friendUserID") // 동일한 사용자 간 중복 친구 관계 방지
+}
+
+model Feed {
+  feedID    String   @id @default(auto()) @map("_id") @db.ObjectId
+  userID    String // 사용자 ID 참조
+  content   String
+  createdAt DateTime @default(now())
+  user      User     @relation("UserFeeds", fields: [userID], references: [userID])
+}
+
+model FriendFeed {
+  friendFeedId String   @id @default(auto()) @map("_id") @db.ObjectId
+  userID       String   @db.ObjectId // 피드를 보는 사용자 ID
+  feedID       String   @db.ObjectId // 친구의 피드 ID
+  cheer        Boolean  @default(false)
+  createdAt    DateTime @default(now()) // 연결이 생성된 시각
+
+  @@unique([userID, feedID], name: "userID_feedID")
+}
+
+model Moment {
+  momentID    String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  status      Boolean
+  date        DateTime
+  complete    Boolean
+  userID      String
+  user        User     @relation("UserMoments", fields: [userID], references: [userID])
+}
+
+model Notification {
+  notificationID String           @id @default(auto()) @map("_id") @db.ObjectId
+  type           NotificationType @default(GENERAL)
+  content        String
+  created_at     DateTime
+  read           Boolean          @default(false)
+  userID         String
+  user           User             @relation("UserNotifications", fields: [userID], references: [userID])
+}
+
+enum NotificationType {
+  GENERAL // 기본값 
 }
