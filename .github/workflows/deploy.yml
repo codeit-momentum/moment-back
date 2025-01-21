@@ -51,7 +51,9 @@ jobs:
       # 7. Lightsail 서버로 파일 업로드
       - name: Upload Files to Lightsail
         run: |
-          ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_PUBLIC_IP }} "mkdir -p /home/ubuntu/my-app"
+          ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_PUBLIC_IP }} "
+            mkdir -p /home/ubuntu/my-app &&
+            rm -f /home/ubuntu/my-app/.env /home/ubuntu/my-app/.env.production"
           scp -r ./* ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_PUBLIC_IP }}:/home/ubuntu/my-app/
 
       # 8. Lightsail 서버에서 Docker Compose 배포
