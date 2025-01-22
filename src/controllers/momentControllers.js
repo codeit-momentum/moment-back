@@ -1,14 +1,14 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 // 모멘트 생성 API (예외처리 완료)
 export const createMoments = async (req, res) => {
     try {
-        const userID = req.user.userID; // JWT 인증을 가정
-        const { bucketID } = req.params; // URL 파라미터
-        const { moments } = req.body;    // 배열 형태
+        const userID = req.user.userID; 
+        const { bucketID } = req.params; 
+        const { moments } = req.body;
 
-        // 1) 요청 유효성 체크
+        //요청 유효성 체크
         if (!Array.isArray(moments) || moments.length === 0) {
             return res.status(400).json({
             success: false,
@@ -16,7 +16,7 @@ export const createMoments = async (req, res) => {
             });
         }
     
-        // 2) 버킷 조회
+        //버킷 조회
         const bucket = await prisma.bucket.findUnique({
             where: { bucketID },
         });
@@ -27,7 +27,7 @@ export const createMoments = async (req, res) => {
             });
         }
     
-        // 3) 버킷 소유자 권한 체크
+        //버킷 소유자 권한 체크
         if (bucket.userID !== userID) {
             return res.status(403).json({
             success: false,
@@ -35,8 +35,8 @@ export const createMoments = async (req, res) => {
             });
         }
     
-        // 4) 버킷 상태 체크: 반복형 + 도전 중
-        if (bucket.type !== 'REPEAT' || !bucket.isChallenging) {
+        //버킷 상태 체크: 반복형 + 도전 중
+        if (bucket.type !== 'RECURRING' || !bucket.isChallenging) {
             return res.status(400).json({
             success: false,
             error: {
@@ -46,9 +46,7 @@ export const createMoments = async (req, res) => {
             });
         }
     
-        // 5) 여러 모멘트 생성 (Promise.all + transaction)
-        //    - 생성된 각 모멘트 레코드를 반환받아야 하면 createMany 대신 create()를 반복
-        //    - transaction으로 감싸면, 중간 실패 시 전체 롤백
+        //여러 모멘트 생성
         const createdMoments = await prisma.$transaction(async (tx) => {
             return Promise.all(
             moments.map((momentItem) => {
@@ -85,7 +83,7 @@ export const getMomentsByBucket = async (req, res) => {
         const userID = req.user.userID;
         const { bucketID } = req.params;
     
-        // 1) 버킷 조회
+        //버킷 조회
         const bucket = await prisma.bucket.findUnique({
             where: { bucketID },
         });
@@ -95,9 +93,9 @@ export const getMomentsByBucket = async (req, res) => {
             error: { code: 404, message: '해당 버킷을 찾을 수 없습니다.' },
             });
         }
-        
 
-        // 3) 모멘트 목록 조회
+
+        //모멘트 목록 조회
         const moments = await prisma.moment.findMany({
             where: { bucketID },
             orderBy: { createdAt: 'asc' }, // 정렬 기준
@@ -109,6 +107,79 @@ export const getMomentsByBucket = async (req, res) => {
         });
         } catch (error) {
         console.error('모멘트 목록 조회 실패:', error);
+        return res.status(500).json({
+            success: false,
+            error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
+        });
+    }
+};
+
+
+// 모멘트 달성 (예외처리 완료)
+export const updateMoment = async (req, res) => {
+    try {
+        const userID = req.user.userID;
+        const { momentID } = req.params;
+        const { content, photoUrl } = req.body;
+    
+        //기존 모멘트 + 버킷 조회
+        const existingMoment = await prisma.moment.findUnique({
+            where: { momentID },
+            include: { bucket: true },
+        });
+        if (!existingMoment) {
+            return res.status(404).json({
+            success: false,
+            error: { code: 404, message: '모멘트를 찾을 수 없습니다.' },
+            });
+        }
+    
+        //소유자 체크
+        if (existingMoment.bucket.userID !== userID) {
+            return res.status(403).json({
+            success: false,
+            error: { code: 403, message: '모멘트를 수정할 권한이 없습니다.' },
+            });
+        }
+    
+        //버킷이 아직 도전 중인지 확인 (이미 끝난 버킷이면 사진 추가 불가)
+        if (!existingMoment.bucket.isChallenging) {
+            return res.status(400).json({
+            success: false,
+            error: { code: 400, message: '이미 도전이 끝난 버킷입니다. 수정할 수 없습니다.' },
+            });
+        }
+    
+        // (추가) 도전 기간 체크 예시
+        // if (existingMoment.bucket.endDate && new Date() > existingMoment.bucket.endDate) {
+        //   return res.status(400).json({
+        //     success: false,
+        //     error: { code: 400, message: '도전 기간이 이미 지났습니다.' },
+        //   });
+        // }
+    
+        //인증 사진 추가 시 => isCompleted = true
+        let newIsCompleted = existingMoment.isCompleted;
+        if (photoUrl && photoUrl.trim() !== '') {
+            newIsCompleted = true;
+        }
+        // (content만 수정할 수도 있으므로 content도 반영)
+        const updatedMoment = await prisma.moment.update({
+            where: { momentID },
+            data: {
+            content: content ?? existingMoment.content,
+            photoUrl: photoUrl ?? existingMoment.photoUrl,
+            isCompleted: newIsCompleted,
+            },
+        });
+    
+        return res.status(200).json({
+            success: true,
+            message: '모멘트를 달성하였습니다.',
+            moment: updatedMoment,
+        });
+        } catch (err) {
+        console.error('모멘트 수정 실패:', err);
         return res.status(500).json({
             success: false,
             error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
