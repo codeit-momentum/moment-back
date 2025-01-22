@@ -1,5 +1,6 @@
 import express from 'express';
 import { createBucket, deleteBucket, updateBucket } from '../controllers/bucketControllers.js';
+import { createMoments, getMomentsByBucket } from '../controllers/momentControllers.js';
 import { jwtMiddleware } from '../middlewares/jwtMiddlewares.js';
 
 const router = express.Router();
@@ -10,5 +11,10 @@ router.use(jwtMiddleware);
 router.post('/bucket', createBucket); // 버킷리스트 등록 
 router.patch('/bucket/:bucketID', updateBucket); // 버킷리스트 수정 
 router.delete('/bucket/:bucketID', deleteBucket); // 버킷리스트 삭제 
+
+//모멘트 등록 조회(bucketID)
+router.post('/buckets/:bucketID/moments', createMoments);
+router.get('/buckets/:bucketID/moments', getMomentsByBucket);
+
 
 export default router;
