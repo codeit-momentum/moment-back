@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 // 버킷리스트 생성 
 export const createBucket = async (req, res) => {
     try {
-        const userID = req.user.userID; 
+        const userID = "1"; 
         const { type, content } = req.body; 
 
         // 현재 사용자 확인 
@@ -55,7 +55,7 @@ export const createBucket = async (req, res) => {
 // 버킷리스트 내용 수정 
 export const updateBucket = async (req, res) => {
     try {
-        const userID = req.user.userID; 
+        const userID = "1"; 
         const { bucketID } = req.params;
         const { type, content } = req.body; 
 
@@ -90,7 +90,7 @@ export const updateBucket = async (req, res) => {
         // 버킷리스트 내용 업데이트 
         const updatedBucket = await prisma.bucket.update({
             where: { userID: userID, bucketID: bucketID, type: type },
-            data: { content, updatedAt: newDate() }
+            data: { content, updatedAt: new Date() }
         });
 
         return res.status(200).json({
@@ -111,8 +111,9 @@ export const updateBucket = async (req, res) => {
 // 버킷리스트 삭제 
 export const deleteBucket = async (req, res) => {
     try {
-        const userID = req.user.userID; 
-        const { bucketID, bucketType } = req.body; 
+        const userID = "1";
+        const { bucketID } = req.params;
+        const { type } = req.body; 
 
         // 현재 사용자 확인 
         const currentUser = await prisma.user.findUnique({
@@ -127,7 +128,7 @@ export const deleteBucket = async (req, res) => {
         }
         
         // 요청 검사 
-        if (!bucketID || !bucketType) {
+        if (!bucketID || !type) {
             return res.status(400).json({
                 success: false,
                 error: { code: 400, message: "bucketID, bucketType는 필수입니다." }
