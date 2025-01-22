@@ -5,12 +5,12 @@ const prisma = new PrismaClient();
 // 버킷리스트 생성 
 export const createBucket = async (req, res) => {
     try {
-        const userID = "1"; 
+        const userID = req.user.userID; // 현재 사용자 ID
         const { type, content } = req.body; 
 
         // 현재 사용자 확인 
         const currentUser = await prisma.user.findUnique({
-            where: { userID: userID },
+            where: { userID },
         });
         
         if (!currentUser) { 
@@ -31,7 +31,7 @@ export const createBucket = async (req, res) => {
         // 버킷리스트 생성
         const newBucket = await prisma.bucket.create({
             data: {
-                userID: userID,
+                userID: currentUser.userID,
                 type: type,
                 content: content
             }
@@ -44,18 +44,18 @@ export const createBucket = async (req, res) => {
         });
     
     } catch (err) {
-      console.error('버킷리스트 생성 실패:', err.message);
-      res.status(500).json({ 
+        console.error('버킷리스트 생성 실패:', err.message);
+        res.status(500).json({ 
         success: false,
         error: { code: 500, message: '버킷리스트 생성에 실패하였습니다.' }
-      });
+    });
     }
-  };
+};
 
 // 버킷리스트 내용 수정 
 export const updateBucket = async (req, res) => {
     try {
-        const userID = "1"; 
+        const userID = req.user.userID; // 현재 사용자 ID
         const { bucketID } = req.params;
         const { type, content } = req.body; 
 
@@ -111,7 +111,7 @@ export const updateBucket = async (req, res) => {
 // 버킷리스트 삭제 
 export const deleteBucket = async (req, res) => {
     try {
-        const userID = "1";
+        const userID = req.user.userID; // 현재 사용자 ID
         const { bucketID } = req.params;
         const { type } = req.body; 
 
