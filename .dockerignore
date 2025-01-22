@@ -1,7 +1,5 @@
-node_modules/
-https/
 .env
-.env.*
 .env.development
 .env.production
-seed.js
+.github
+node_modules
