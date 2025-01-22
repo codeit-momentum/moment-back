@@ -215,4 +215,47 @@ export const getCompletedMomentsByDay = async (req, res) => {
   }
 };
 
-// 버킷리스트 달성 현황 
+// 버킷리스트 달성 현황
+export const getBucketListStatus = async (req, res) => {
+  try {
+    const currentUser = req.user;
+
+    if (!currentUser) {
+      return res.status(404).json({
+        success: false,
+        error: { code: 404, message: '현재 사용자를 찾을 수 없습니다.' },
+      });
+    }
+
+    // 사용자 ID에 해당하는 버킷리스트 항목 조회
+    const bucketListItems = await prisma.bucketList.findMany({
+      where: { userID: currentUser.userID },
+    });
+
+    if (bucketListItems.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: { code: 404, message: '버킷리스트 항목이 없습니다.' },
+      });
+    }
+
+    // 달성된 버킷리스트 항목 계산
+    const completedBucketList = bucketListItems.filter(item => item.completed === true);
+    const completionRate = completedBucketList.length / bucketListItems.length;
+
+    return res.status(200).json({
+      success: true,
+      messages: '성공적으로 조회 완료하였습니다.',
+      user: { userID: currentUser.userID },
+      bucket: completionRate,
+    });
+  } catch (err) {
+    console.error('버킷리스트 달성 현황 조회 실패:', err.message);
+    return res.status(500).json({
+      success: false,
+      error: { code: 500, message: '버킷리스트 달성 현황 조회를 하는 데 실패하였습니다.' },
+    });
+  }
+};
+
+module.exports = { getHome, getNotifications, markNotificationAsRead, getCompletedMomentsByWeek, getCompletedMomentsByDay, getBucketListStatus };
