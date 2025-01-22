@@ -147,7 +147,7 @@ export const deleteUser = async (req, res) => {
       return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
     }
 
-    // 사용자 삭제 (연관된 데이터 Cascade로 삭제제)
+    // 사용자 삭제 (연관된 데이터 Cascade로 삭제)
     await prisma.user.delete({
       where: { userID },
     });

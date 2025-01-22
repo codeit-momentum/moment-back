@@ -114,8 +114,12 @@ export const handleKakaoUser = async (req, res) => {
             // 기본 닉네임 생성 (사용자의 이메일 @ 앞 부분을 따옴)
             const nickname = email.split('@')[0]; // 이메일의 @ 앞부분 반환
 
-            // 기본 프로필 이미지 URL 설정
-            const defaultProfileImageUrl = "https://momentum-s3-bucket.s3.ap-northeast-2.amazonaws.com/profile/basic/free-icon-profile-4519729.png"; // 추후에 실제 기본 프로필 이미지로 변경 필요
+            // 기본 프로필 이미지 URL 설정 (랜덤 선택)
+            const profileImages = [
+                "https://momentum-s3-bucket.s3.ap-northeast-2.amazonaws.com/profile/basic/Momentum_Icon_NullProfile.png",
+                "https://momentum-s3-bucket.s3.ap-northeast-2.amazonaws.com/profile/basic/Momentum_Icon_NullProfile(Black).png"
+            ];
+            const defaultProfileImageUrl = profileImages[Math.floor(Math.random() * profileImages.length)];
 
             // 사용자가 없으면 새로 생성
             user = await prisma.user.create({

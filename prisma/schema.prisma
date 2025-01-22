@@ -76,7 +76,7 @@ model Moment {
   date        DateTime
   complete    Boolean
   userID      String
-  user        User     @relation("UserMoments", fields: [userID], references: [userID])
+  user        User     @relation("UserMoments", fields: [userID], references: [userID], onDelete: Cascade)
   bucketID    String   @db.ObjectId
   bucket      Bucket   @relation("BucketMoments", fields: [bucketID], references: [bucketID], onDelete: Cascade)
 }
@@ -88,7 +88,7 @@ model Notification {
   createdAt      DateTime
   isRead         Boolean          @default(false)
   userID         String
-  user           User             @relation("UserNotifications", fields: [userID], references: [userID])
+  user           User             @relation("UserNotifications", fields: [userID], references: [userID], onDelete: Cascade)
 }
 
 enum NotificationType {
@@ -103,7 +103,7 @@ model Bucket {
   updatedAt DateTime?  @updatedAt
   moments   Moment[]   @relation("BucketMoments")
   userID    String
-  user      User       @relation("UserBuckets", fields: [userID], references: [userID])
+  user      User       @relation("UserBuckets", fields: [userID], references: [userID], onDelete: Cascade)
 }
 
 enum BucketType {
