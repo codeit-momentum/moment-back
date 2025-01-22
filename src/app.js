@@ -34,7 +34,8 @@ app.use('/api/home', homeRoutes);
 app.use('/api/moment', momentRoutes);
 
 console.log('Current Environment:', process.env.NODE_ENV);
-console.log('Redirect URI:', process.env.REDIRECT_URI);
+console.log('Redirect URI LOCAL:', process.env.REDIRECT_URI_LOCAL);
+console.log('Redirect URI DEPLOY:', process.env.REDIRECT_URI_DEPLOY);
 console.log('REST_API_KEY:', process.env.REST_API_KEY);
 
 export default app;
