@@ -31,6 +31,7 @@ model User {
   moments       Moment[]       @relation("UserMoments") // 사용자가 추가한 모멘트 목록 
   notifications Notification[] @relation("UserNotifications") // 사용자 알람 목록 
   bucket        Bucket[]       @relation("UserBuckets") // 사용자 추가한 버킷리스트 
+  
 }
 
 model Friend {
@@ -69,16 +70,20 @@ model FriendFeed {
 }
 
 model Moment {
-  momentID    String   @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  description String
-  status      Boolean
-  date        DateTime
-  complete    Boolean
-  userID      String
-  user        User     @relation("UserMoments", fields: [userID], references: [userID])
-  bucketID    String   @db.ObjectId
-  bucket      Bucket   @relation("BucketMoments", fields: [bucketID], references: [bucketID], onDelete: Cascade)
+  momentID      String   @id @default(auto()) @map("_id") @db.ObjectId
+  content       String
+  isCompleted   Boolean  @default(false)
+  photoUrl      String?  // 인증사진
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // 어떤 버킷에 속하는지
+  bucketID      String
+  bucket        Bucket   @relation("BucketMoments", fields: [bucketID], references: [bucketID])
+
+  // 누가 생성했는지 (필요하다면)
+  userID        String
+  user          User     @relation("UserMoments", fields: [userID], references: [userID])
 }
 
 model Notification {
@@ -96,14 +101,17 @@ enum NotificationType {
 }
 
 model Bucket {
-  bucketID  String     @id @default(auto()) @map("_id") @db.ObjectId
-  type      BucketType
-  content   String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime?  @updatedAt
-  moments   Moment[]   @relation("BucketMoments")
-  userID    String
-  user      User       @relation("UserBuckets", fields: [userID], references: [userID])
+  bucketID      String     @id @default(auto()) @map("_id") @db.ObjectId
+  type          BucketType
+  content       String
+  createdAt     DateTime   @default(now())
+  isChallenging Boolean    @default(false)
+  startDate     DateTime?
+  endDate       DateTime?
+  updatedAt     DateTime?  @updatedAt
+  moments       Moment[]   @relation("BucketMoments")
+  userID        String
+  user          User       @relation("UserBuckets", fields: [userID], references: [userID])
 }
 
 enum BucketType {
