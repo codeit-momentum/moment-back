@@ -150,7 +150,11 @@ export const handleKakaoUser = async (req, res) => {
         const refreshToken = generateRefreshToken(user);
 
         // Refresh Token을 HttpOnly 쿠키에 저장
-        res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: false, sameSite: 'none' });
+        res.cookie('refreshToken', refreshToken, { 
+            httpOnly: true, 
+            secure: process.env.NODE_ENV === 'production', 
+            sameSite: 'none' 
+        });
 
         // 사용자 정보 + JWT 토큰 반환
         res.json({ 
