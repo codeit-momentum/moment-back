@@ -105,7 +105,7 @@ export const updateProfileImage = async (req, res) => {
     }
 
     const bucketName = process.env.AWS_S3_BUCKET_NAME;
-    const key = `profile/custom/${req.user.userID}-${Date.now()}`;
+    const key = `profile/custom/${req.user.userID}/${req.user.userID}-${Date.now()}`;
 
     const command = new PutObjectCommand({
       Bucket: bucketName,
@@ -151,7 +151,7 @@ export const updateProfile = async (req, res) => {
     // 프로필 이미지 처리
     if (req.file) {
       const bucketName = process.env.AWS_S3_BUCKET_NAME;
-      const key = `profile/custom/${req.user.userID}-${Date.now()}`;
+      const key = `profile/custom/${req.user.userID}/${req.user.userID}-${Date.now()}`;
 
       const command = new PutObjectCommand({
         Bucket: bucketName,

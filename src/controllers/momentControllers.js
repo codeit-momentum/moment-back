@@ -1,4 +1,7 @@
 import { PrismaClient } from '@prisma/client';
+import { s3Client } from '../config/s3config.js';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+
 const prisma = new PrismaClient();
 
 // 모멘트 생성 API (예외처리 완료)
@@ -120,7 +123,7 @@ export const updateMoment = async (req, res) => {
     try {
         const userID = req.user.userID;
         const { momentID } = req.params;
-        const { content, photoUrl } = req.body;
+        const { content } = req.body;
     
         //기존 모멘트 + 버킷 조회
         const existingMoment = await prisma.moment.findUnique({
@@ -148,6 +151,24 @@ export const updateMoment = async (req, res) => {
             success: false,
             error: { code: 400, message: '이미 도전이 끝난 버킷입니다. 수정할 수 없습니다.' },
             });
+        }
+
+        // S3 이미지 업로드 처리
+        let photoUrl = null;
+
+        if (req.file) {
+            const bucketName = process.env.AWS_S3_BUCKET_NAME;
+            const key = `moment/${userID}/${momentID}-${Date.now()}`;
+
+            const command = new PutObjectCommand({
+                Bucket: bucketName,
+                Key: key,
+                Body: req.file.buffer, // Multer는 파일 데이터를 buffer로 제공
+                ContentType: req.file.mimetype, // 파일의 MIME 타입
+            });
+
+            await s3Client.send(command);
+            photoUrl = `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
         }
     
         // (추가) 도전 기간 체크 예시
