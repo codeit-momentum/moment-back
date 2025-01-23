@@ -4,3 +4,4 @@ https/
 .env.*
 .env.development
 .env.production
+seed.js
