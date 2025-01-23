@@ -27,6 +27,15 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(cookieParser());
+// 쿠키 설정
+app.use((req, res, next) => {
+  res.cookie('refreshToken', 'your_refresh_token_value', {
+    httpOnly: true, // 클라이언트에서 JavaScript로 쿠키에 접근할 수 없도록 설정
+    secure: process.env.NODE_ENV === 'production', // HTTPS 환경에서만 Secure 쿠키 사용
+    sameSite: 'None', // 크로스사이트 쿠키 허용
+  });
+  next();
+});
 app.use('/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/friends', friendRoutes);
