@@ -5,10 +5,10 @@ import dotenv from 'dotenv';
 import 'dotenv-flow/config';
 import express from 'express';
 import authRoutes from './routes/authRoutes.js';
-import userRoutes from './routes/userRoutes.js';
 import friendRoutes from './routes/friendRoutes.js';
 import homeRoutes from "./routes/homeRoutes.js";
 import momentRoutes from "./routes/momentRoutes.js";
+import userRoutes from './routes/userRoutes.js';
 
 
 dotenv.config({override: true});
