@@ -7,12 +7,12 @@ const prisma = new PrismaClient();
 
 // 카카오 로그인 페이지로 리디렉션 (프론트에서 하는 작업) (테스트용)
 export const redirectToKakaoLogin = (req, res) => {
-    const origin = req.headers.origin || 'http://localhost:3000'; // 요청 헤더의 Origin 감지
+    const origin = req.headers.origin || 'https://codeit-momentum'; // 요청 헤더의 Origin 감지
     // 동적으로 REDIRECT_URI 설정
     const redirectUri =
-        origin.includes('localhost') // 로컬
-            ? process.env.REDIRECT_URI_LOCAL // 로컬 환경의 리다이렉션 URI (프론트엔드)
-            : process.env.REDIRECT_URI_DEPLOY; // 배포 환경의 리다이렉션 URI
+        origin.includes('codeit-momentum') // 배포 환경
+            ? process.env.REDIRECT_URI_DEPLOY // 배포 환경의 리다이렉션 URI
+            : process.env.REDIRECT_URI_LOCAL; // 로컬 환경의 리다이렉션 URI (프론트엔드)
 
     const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${process.env.REST_API_KEY}&redirect_uri=${redirectUri}`;
     res.redirect(kakaoAuthUrl); // 사용자 브라우저를 카카오 로그인 페이지로 리디렉션
@@ -33,12 +33,12 @@ export const handleKakaoCallback = (req, res) => {
 
 export const kakaoLogin = async (req, res) => {
     const { code } = req.body; // 클라이언트에서 받은 인가 코드
-    const origin = req.headers.origin || 'http://localhost:3000'; // 요청 헤더의 Origin 감지
+    const origin = req.headers.origin || 'https://codeit-momentum'; // 요청 헤더의 Origin 감지
 
     const redirectUri =
-        origin.includes('localhost') // 로컬
-            ? process.env.REDIRECT_URI_LOCAL // 로컬 환경의 리다이렉션 URI (프론트엔드)
-            : process.env.REDIRECT_URI_DEPLOY; // 배포 환경의 리다이렉션 URI
+        origin.includes('codeit-momentum') // 배포 환경
+            ? process.env.REDIRECT_URI_DEPLOY // 배포 환경의 리다이렉션 URI
+            : process.env.REDIRECT_URI_LOCAL; // 로컬 환경의 리다이렉션 URI (프론트엔드)
     try {
         const response = await axios.post('https://kauth.kakao.com/oauth/token', null, {
             params: {
@@ -150,7 +150,11 @@ export const handleKakaoUser = async (req, res) => {
         const refreshToken = generateRefreshToken(user);
 
         // Refresh Token을 HttpOnly 쿠키에 저장
-        res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: false, sameSite: 'strict' });
+        res.cookie('refreshToken', refreshToken, { 
+            httpOnly: true, 
+            secure: process.env.NODE_ENV === 'production', 
+            sameSite: 'none' 
+        });
 
         // 사용자 정보 + JWT 토큰 반환
         res.json({ 
