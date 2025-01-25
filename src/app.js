@@ -31,7 +31,7 @@ app.use('/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/home', homeRoutes);
-app.use('/api/moment', momentRoutes);
+app.use('/api/bucket', momentRoutes);
 
 console.log('Current Environment:', process.env.NODE_ENV);
 console.log('Redirect URI LOCAL:', process.env.REDIRECT_URI_LOCAL);
