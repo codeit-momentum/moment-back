@@ -200,7 +200,7 @@ export const updateMoment = async (req, res) => {
             const updatedMoment = await tx.moment.update({
             where: { momentID },
             data: {
-                photoUrl: photoUrl ?? existingMoment.photoUrl,
+                photoUrl: photoUrl,
                 isCompleted: true,
                 updatedAt: new Date(),
             },

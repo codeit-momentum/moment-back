@@ -335,3 +335,29 @@ export const updateBucket = async (req, res) => {
         });
     }
 };
+
+export const getCompletedBuckets = async (req, res) => {
+    try {
+        const userID = req.user.userID;
+    
+        // `isCompleted: true`인 버킷리스트 개수 조회
+        const completedCount = await prisma.bucket.count({
+            where: {
+                userID,
+                isCompleted: true,
+            },
+        });
+    
+        return res.status(200).json({
+            success: true,
+            message: '달성된 버킷리스트 개수 조회 성공',
+            completedCount,
+        });
+        } catch (error) {
+        console.error('달성된 버킷리스트 개수 조회 실패:', error);
+        return res.status(500).json({
+            success: false,
+            error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
+        });
+    }
+};
