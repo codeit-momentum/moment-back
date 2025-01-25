@@ -81,7 +81,7 @@ model Moment {
   bucketID      String   @db.ObjectId
   bucket        Bucket   @relation("BucketMoments", fields: [bucketID], references: [bucketID], onDelete: Cascade)
 
-  // 누가 생성했는지 (필요하다면)
+  
   userID        String
   user          User     @relation("UserMoments", fields: [userID], references: [userID], onDelete: Cascade)
 }
@@ -110,6 +110,8 @@ model Bucket {
   isCompleted   Boolean?   @default(false) // 달성형이 완료됐는지
 
   isChallenging Boolean    @default(false)
+  momentsCount          Int @default(0)
+  completedMomentsCount Int @default(0)
   startDate     DateTime?
   endDate       DateTime?
   createdAt     DateTime   @default(now())

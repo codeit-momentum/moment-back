@@ -11,7 +11,7 @@ const upload = multer();
 router.use(jwtMiddleware);
 
 router.post('/', createBucket); // 버킷리스트 등록 
-router.patch('/:bucketID/achievement-photo', uploadAchievementPhoto.single('image'), uploadAchievementPhoto); // 버킷리스트 수정 
+router.patch('/:bucketID/achievement-photo', uploadAchievementPhoto); // 버킷리스트 수정 
 router.patch('/:bucketID/challenge', activateBucketChallenge);
 router.patch('/:bucketID/un-challenge', deactivateBucketChallenge);
 router.get('/:bucketID', getBucketDetail);
@@ -19,7 +19,7 @@ router.get('/:bucketID', getBucketDetail);
 //모멘트 등록 조회(bucketID)
 router.post('/moments/:bucketID/moments', createMoments);
 router.get('/moments/:bucketID/moments', getMomentsByBucket);
-router.patch('/moments/:momentID', upload.single('photoUrl'), updateMoment); //모멘트 달성
+router.patch('/moments/:momentID', updateMoment); //모멘트 달성
 
 
 export default router;

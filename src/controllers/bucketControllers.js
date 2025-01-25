@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 export const createBucket = async (req, res) => {
     try {
         const userID = req.user.userID;
-        const { type, content } = req.body;
+        const { type, category, content } = req.body;
 
         if (!type || !content) {
         return res.status(400).json({
@@ -70,11 +70,21 @@ export const createBucket = async (req, res) => {
         }
 
         // Multer-S3 업로드 결과
-        if (!req.file || !req.file.location) {
-        return res.status(400).json({
-            success: false,
-            error: { code: 400, message: '업로드된 이미지가 없습니다.' },
-        });
+        let photoUrl = null;
+
+        if (req.file) {
+            const bucketName = process.env.AWS_S3_BUCKET_NAME;
+            const key = `moment/${userID}/${momentID}-${Date.now()}`;
+
+            const command = new PutObjectCommand({
+                Bucket: bucketName,
+                Key: key,
+                Body: req.file.buffer, // Multer는 파일 데이터를 buffer로 제공
+                ContentType: req.file.mimetype, // 파일의 MIME 타입
+            });
+
+            await s3Client.send(command);
+            photoUrl = `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
         }
 
         const updatedBucket = await prisma.bucket.update({
