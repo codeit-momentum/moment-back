@@ -101,17 +101,35 @@ enum NotificationType {
 }
 
 model Bucket {
-  bucketID  String     @id @default(auto()) @map("_id") @db.ObjectId
-  type      BucketType
-  content   String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime?  @updatedAt
-  moments   Moment[]   @relation("BucketMoments")
-  userID    String
-  user      User       @relation("UserBuckets", fields: [userID], references: [userID], onDelete: Cascade)
+  bucketID      String     @id @default(auto()) @map("_id") @db.ObjectId
+  type          BucketType
+  category      BucketCategory
+  content       String
+
+  photoUrl      String?    // 인증사진 경로 (S3 업로드)
+  isCompleted   Boolean?   @default(false) // 달성형이 완료됐는지
+
+  isChallenging Boolean    @default(false)
+  startDate     DateTime?
+  endDate       DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime?  @updatedAt
+
+  userID        String
+  user          User       @relation("UserBuckets", fields: [userID], references: [userID])
+
+  moments       Moment[]   @relation("BucketMoments")
 }
 
 enum BucketType {
-  GOAL // 달성형
-  RECURRING // 반복형 
+  REPEAT       // 반복형
+  ACHIEVEMENT  // 달성형
+}
+
+enum BucketCategory {
+  HOBBY
+  LANGUAGE
+  STUDY
+  EXERCISE
+  ETC
 }
