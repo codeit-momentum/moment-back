@@ -76,7 +76,7 @@ export const uploadAchievementPhoto = async (req, res) => {
 
         if (req.file) {
             const bucketName = process.env.AWS_S3_BUCKET_NAME;
-            const key = `bucket/${userID}/${bucketID}-${Date.now()}`;
+            const key = `bucket/${userID}/${bucketID}/${Date.now()}`;
 
             const command = new PutObjectCommand({
                 Bucket: bucketName,
@@ -92,7 +92,7 @@ export const uploadAchievementPhoto = async (req, res) => {
         const updatedBucket = await prisma.bucket.update({
         where: { bucketID },
         data: {
-            photoUrl: req.file.location,
+            photoUrl: photoUrl,
             isCompleted: true,  // 달성 완료
         },
         });
@@ -109,7 +109,7 @@ export const uploadAchievementPhoto = async (req, res) => {
         error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
         });
     }
-    };
+};
 
 
 /**
@@ -194,6 +194,12 @@ export const deactivateBucketChallenge = async (req, res) => {
         }
         if (bucket.userID !== userID) {
             return res.status(403).json({ success: false, error: { code: 403, message: '권한 없음' }});
+        }
+        if (bucket.type !== 'REPEAT') {
+            return res.status(400).json({
+                success: false,
+                error: { code: 400, message: '달성형 버킷은 도전 안함으로 설정할 수 없습니다.' },
+            });
         }
         if (!bucket.isChallenging) {
             return res.status(400).json({
