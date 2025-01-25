@@ -73,15 +73,15 @@ model Moment {
   momentID      String   @id @default(auto()) @map("_id") @db.ObjectId
   content       String
   isCompleted   Boolean  @default(false)
-  photoUrl      String?  // 인증사진
+  photoUrl      String?  @default("")// 인증사진
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   // 어떤 버킷에 속하는지
   bucketID      String   @db.ObjectId
   bucket        Bucket   @relation("BucketMoments", fields: [bucketID], references: [bucketID], onDelete: Cascade)
-  startDate     DateTime?
-  endDate       DateTime?
+  startDate     DateTime?   @default(now())
+  endDate       DateTime?   @default("2025-12-31T00:00:00.000Z")
   
   userID        String
   user          User     @relation("UserMoments", fields: [userID], references: [userID], onDelete: Cascade)
@@ -112,8 +112,8 @@ model Bucket {
   isChallenging Boolean     @default(false)
   momentsCount          Int @default(0)
   completedMomentsCount Int @default(0)
-  startDate     DateTime?   
-  endDate       DateTime?   
+  startDate     DateTime?   @default(now())
+  endDate       DateTime?   @default("2025-12-31T00:00:00.000Z") 
   createdAt     DateTime    @default(now())
   updatedAt     DateTime?   @updatedAt
 
