@@ -76,6 +76,8 @@ export const createMoments = async (req, res) => {
                     content: m.content || '',
                     photoUrl: null,
                     isCompleted: false,
+                    startDate: new Date(m.startDate),
+                    endDate: new Date(m.endDate),
                     bucketID: bucketID,
                     userID: userID,
                     },
