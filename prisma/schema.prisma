@@ -103,7 +103,6 @@ enum NotificationType {
 model Bucket {
   bucketID      String     @id @default(auto()) @map("_id") @db.ObjectId
   type          BucketType
-  category      BucketCategory
   content       String
 
   photoUrl      String?    // 인증사진 경로 (S3 업로드)
@@ -126,12 +125,4 @@ model Bucket {
 enum BucketType {
   REPEAT       // 반복형
   ACHIEVEMENT  // 달성형
-}
-
-enum BucketCategory {
-  HOBBY
-  LANGUAGE
-  STUDY
-  EXERCISE
-  ETC
 }
