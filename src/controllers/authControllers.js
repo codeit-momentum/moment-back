@@ -10,9 +10,9 @@ export const redirectToKakaoLogin = (req, res) => {
     const origin = req.headers.origin || 'http://localhost:3000'; // 요청 헤더의 Origin 감지
     // 동적으로 REDIRECT_URI 설정
     const redirectUri =
-        origin.includes('localhost') // 로컬
-            ? process.env.REDIRECT_URI_LOCAL // 로컬 환경의 리다이렉션 URI (프론트엔드)
-            : process.env.REDIRECT_URI_DEPLOY; // 배포 환경의 리다이렉션 URI
+        origin.includes('codeit-momentum') // 배포 환경
+            ? process.env.REDIRECT_URI_DEPLOY // 배포 환경의 리다이렉션 URI
+            : process.env.REDIRECT_URI_LOCAL; // 로컬 환경의 리다이렉션 URI (프론트엔드)
 
     const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${process.env.REST_API_KEY}&redirect_uri=${redirectUri}`;
     res.redirect(kakaoAuthUrl); // 사용자 브라우저를 카카오 로그인 페이지로 리디렉션
@@ -36,9 +36,9 @@ export const kakaoLogin = async (req, res) => {
     const origin = req.headers.origin || 'http://localhost:3000'; // 요청 헤더의 Origin 감지
 
     const redirectUri =
-        origin.includes('localhost') // 로컬
-            ? process.env.REDIRECT_URI_LOCAL // 로컬 환경의 리다이렉션 URI (프론트엔드)
-            : process.env.REDIRECT_URI_DEPLOY; // 배포 환경의 리다이렉션 URI
+        origin.includes('codeit-momentum') // 배포 환경
+            ? process.env.REDIRECT_URI_DEPLOY // 배포 환경의 리다이렉션 URI
+            : process.env.REDIRECT_URI_LOCAL; // 로컬 환경의 리다이렉션 URI (프론트엔드)
     try {
         const response = await axios.post('https://kauth.kakao.com/oauth/token', null, {
             params: {
