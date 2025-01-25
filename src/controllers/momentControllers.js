@@ -1,4 +1,6 @@
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { PrismaClient } from '@prisma/client';
+import { s3Client } from './config/s3config.js';
 
 const prisma = new PrismaClient();
 
