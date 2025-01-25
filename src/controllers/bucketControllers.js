@@ -20,7 +20,6 @@ export const createBucket = async (req, res) => {
         data: {
             userID,
             type,
-            category,
             content,
         },
         });
