@@ -7,7 +7,14 @@ const prisma = new PrismaClient();
 
 // 카카오 로그인 페이지로 리디렉션 (프론트에서 하는 작업) (테스트용)
 export const redirectToKakaoLogin = (req, res) => {
-    const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${process.env.REST_API_KEY}&redirect_uri=${process.env.REDIRECT_URI}`;
+    const origin = req.headers.origin || 'https://codeit-momentum'; // 요청 헤더의 Origin 감지
+    // 동적으로 REDIRECT_URI 설정
+    const redirectUri =
+        origin.includes('codeit-momentum') // 배포 환경
+            ? process.env.REDIRECT_URI_DEPLOY // 배포 환경의 리다이렉션 URI
+            : process.env.REDIRECT_URI_LOCAL; // 로컬 환경의 리다이렉션 URI (프론트엔드)
+
+    const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${process.env.REST_API_KEY}&redirect_uri=${redirectUri}`;
     res.redirect(kakaoAuthUrl); // 사용자 브라우저를 카카오 로그인 페이지로 리디렉션
 };
 
@@ -26,13 +33,18 @@ export const handleKakaoCallback = (req, res) => {
 
 export const kakaoLogin = async (req, res) => {
     const { code } = req.body; // 클라이언트에서 받은 인가 코드
+    const origin = req.headers.origin || 'https://codeit-momentum'; // 요청 헤더의 Origin 감지
 
+    const redirectUri =
+        origin.includes('codeit-momentum') // 배포 환경
+            ? process.env.REDIRECT_URI_DEPLOY // 배포 환경의 리다이렉션 URI
+            : process.env.REDIRECT_URI_LOCAL; // 로컬 환경의 리다이렉션 URI (프론트엔드)
     try {
         const response = await axios.post('https://kauth.kakao.com/oauth/token', null, {
             params: {
             grant_type: 'authorization_code',
             client_id: process.env.REST_API_KEY,
-            redirect_uri: process.env.REDIRECT_URI,
+            redirect_uri: redirectUri, // 감지된 리다이렉션 URI 사용
             code: code,
             },
         });
@@ -114,8 +126,12 @@ export const handleKakaoUser = async (req, res) => {
             // 기본 닉네임 생성 (사용자의 이메일 @ 앞 부분을 따옴)
             const nickname = email.split('@')[0]; // 이메일의 @ 앞부분 반환
 
-            // 기본 프로필 이미지 URL 설정
-            const defaultProfileImageUrl = "https://momentum-s3-bucket.s3.ap-northeast-2.amazonaws.com/profile/basic/free-icon-profile-4519729.png"; // 추후에 실제 기본 프로필 이미지로 변경 필요
+            // 기본 프로필 이미지 URL 설정 (랜덤 선택)
+            const profileImages = [
+                "https://momentum-s3-bucket.s3.ap-northeast-2.amazonaws.com/profile/basic/Momentum_Icon_NullProfile.png",
+                "https://momentum-s3-bucket.s3.ap-northeast-2.amazonaws.com/profile/basic/Momentum_Icon_NullProfile(Black).png"
+            ];
+            const defaultProfileImageUrl = profileImages[Math.floor(Math.random() * profileImages.length)];
 
             // 사용자가 없으면 새로 생성
             user = await prisma.user.create({
@@ -134,7 +150,11 @@ export const handleKakaoUser = async (req, res) => {
         const refreshToken = generateRefreshToken(user);
 
         // Refresh Token을 HttpOnly 쿠키에 저장
-        res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: false, sameSite: 'strict' });
+        res.cookie('refreshToken', refreshToken, { 
+            httpOnly: true, 
+            secure: process.env.NODE_ENV === 'production', 
+            sameSite: 'none' 
+        });
 
         // 사용자 정보 + JWT 토큰 반환
         res.json({ 

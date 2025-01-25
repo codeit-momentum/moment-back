@@ -6,9 +6,12 @@ const prisma = new PrismaClient();
 // 홈 조회
 export const getHome = async (req, res) => {
     try {
+      // 현재 인증된 사용자 정보 가져오기
+      const userID = req.user.userID; // 현재 사용자 ID
+
       // 현재 사용자 조회
       const currentUser = await prisma.user.findUnique({
-        where: { userID: "2" },
+        where: { userID },
       });
 
       if (!currentUser) { 
@@ -21,7 +24,7 @@ export const getHome = async (req, res) => {
       
       // 사용자의 moments 조회 
       const moments = await prisma.moment.findMany({
-        where: { userID: "2" },
+        where: { userID },
         orderBy: { date: 'desc' },
         select: {
           momentID: true,
@@ -50,9 +53,11 @@ export const getHome = async (req, res) => {
 // 알림 조회 및 새 알림 표시 
 export const getNotifications = async (req, res) => {
   try {
+    const userID = req.user.userID; // 현재 사용자 ID
+
     // 현재 사용자 조회
     const currentUser = await prisma.user.findUnique({
-      where: { userID: "1" },
+      where: { userID },
     });
 
     if (!currentUser) { 
@@ -64,7 +69,7 @@ export const getNotifications = async (req, res) => {
     
     // 사용자의 알림 조회 
     const notifications = await prisma.notification.findMany({
-      where: { userID: "1" },
+      where: { userID },
       orderBy: { createdAt: 'desc' },
       select: {
         notificationID: true,
@@ -78,7 +83,7 @@ export const getNotifications = async (req, res) => {
     // 사용자의 새로운 알림 개수 표시 
     const newNotificationsCount = await prisma.notification.count({
       where: {
-        userID: "1",
+        userID,
         isRead: false // 읽지 않은 알림만 조회
       }
     });
@@ -101,7 +106,7 @@ export const getNotifications = async (req, res) => {
 
 // 알림 읽음 처리 
 export const markNotificationAsRead = async (req, res) => {
-  const userID = "1";
+  const userID = req.user.userID; // 인증된 사용자 ID
   const { notificationID } = req.params; 
 
   try {
@@ -118,7 +123,7 @@ export const markNotificationAsRead = async (req, res) => {
         error: { code: 403, message: "해당 알림에 대한 권한이 없습니다." }
       });
     }
-     
+    
     // 알림이 존재하는지 확인 
     if (!notification) {
       return res.status(404).json({
@@ -151,7 +156,7 @@ export const markNotificationAsRead = async (req, res) => {
 // 당일 모먼트 완료 조회 
 export const getCompletedMomentsByDay = async (req, res) => {
   try {
-    const userID = "2";
+    const userID = req.user.userID; // 인증된 사용자 ID
     const { date } = req.body;
 
     // 현재 사용자 조회
@@ -185,7 +190,7 @@ export const getCompletedMomentsByDay = async (req, res) => {
     // 특정 주에서 데이터 조회
     const completedMoments = await prisma.moment.findMany({
       where: {
-        userID: userID, // 현재 사용자만 조회
+        userID, // 현재 사용자만 조회
         date: {
           gte: new Date(inputDate.setHours(0, 0, 0, 0)), // 시작 시간: 자정
           lt: new Date(inputDate.setHours(24, 0, 0, 0)), // 종료 시간: 다음 날 자정

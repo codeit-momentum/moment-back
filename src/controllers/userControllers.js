@@ -105,7 +105,7 @@ export const updateProfileImage = async (req, res) => {
     }
 
     const bucketName = process.env.AWS_S3_BUCKET_NAME;
-    const key = `profile/custom/${req.user.userID}-${Date.now()}`;
+    const key = `profile/custom/${req.user.userID}/${req.user.userID}-${Date.now()}`;
 
     const command = new PutObjectCommand({
       Bucket: bucketName,
@@ -133,6 +133,67 @@ export const updateProfileImage = async (req, res) => {
   }
 }
 
+// 사용자 닉네임 & 프로필 이미지 업데이트
+export const updateProfile = async (req, res) => {
+  try {
+    const { newNickname } = req.body; // 새 닉네임
+    let profileImageUrl = null; // 프로필 이미지 URL 초기화
+
+    if (!newNickname) {
+      return res.status(400).json({ message: '새 닉네임이 필요합니다.' });
+    }
+
+    // 닉네임 검증
+    if (newNickname && newNickname.length > 20) {
+      return res.status(400).json({ message: '닉네임은 최대 20자까지 가능합니다.' });
+    }
+
+    // 프로필 이미지 처리
+    if (req.file) {
+      const bucketName = process.env.AWS_S3_BUCKET_NAME;
+      const key = `profile/custom/${req.user.userID}/${req.user.userID}-${Date.now()}`;
+
+      const command = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: key,
+        Body: req.file.buffer, // Multer는 파일 데이터를 buffer로 제공
+        ContentType: req.file.mimetype, // 파일의 MIME 타입
+      });
+
+      await s3Client.send(command);
+      profileImageUrl = `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+    }
+
+    // 사용자 정보 업데이트
+    const updatedData = {};
+    if (newNickname) updatedData.nickname = newNickname; // 닉네임 업데이트
+    if (profileImageUrl) updatedData.profileImageUrl = profileImageUrl; // 프로필 이미지 업데이트
+
+    if (Object.keys(updatedData).length === 0) {
+      return res.status(400).json({ message: '변경할 닉네임 또는 프로필 이미지를 제공해주세요.' });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { userID: req.user.userID },
+      data: updatedData,
+      select: {
+        userID: true,
+        nickname: true,
+        email: true,
+        profileImageUrl: true,
+      },
+    });
+
+    res.status(200).json({
+      message: '사용자 정보가 성공적으로 업데이트되었습니다.',
+      user: updatedUser,
+    });
+  } catch (err) {
+    console.error('사용자 정보 업데이트 오류:', err.message);
+    res.status(500).json({ message: '사용자 정보 업데이트 중 오류가 발생했습니다.' });
+  }
+}
+
 // 사용자 회원탈퇴
 export const deleteUser = async (req, res) => {
   const userID = req.user.userID; // 요청한 사용자의 userID 가져오기
@@ -147,7 +208,7 @@ export const deleteUser = async (req, res) => {
       return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
     }
 
-    // 사용자 삭제 (연관된 데이터 Cascade로 삭제제)
+    // 사용자 삭제 (연관된 데이터 Cascade로 삭제)
     await prisma.user.delete({
       where: { userID },
     });
