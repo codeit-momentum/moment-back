@@ -21,6 +21,7 @@ const corsOptions = {
     'https://codeit.momentum.vercel.app', // 프론트엔드 배포 환경
   ],
   credentials: true, // 쿠키 및 인증 헤더 허용
+  exposedHeaders: ['x-access-token'],
 }
 
 // 미들웨어, 라우트 등등 (Express 애플리케이션 설정)
