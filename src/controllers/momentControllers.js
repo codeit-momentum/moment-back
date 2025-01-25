@@ -141,73 +141,74 @@ export const getMomentsByBucket = async (req, res) => {
 
 
 // 모멘트 달성 (예외처리 완료)
-
 export const updateMoment = async (req, res) => {
     try {
         const userID = req.user.userID;
         const { momentID } = req.params;
-        const { content, isCompleted } = req.body;  // <-- isCompleted 받아올 수도 있으니 구조분해
-
+        const { content } = req.body;
+    
         // 모멘트+버킷 조회
         const existingMoment = await prisma.moment.findUnique({
             where: { momentID },
             include: { bucket: true },
         });
         if (!existingMoment) {
-        return res.status(404).json({
+            return res.status(404).json({
             success: false,
             error: { code: 404, message: '모멘트를 찾을 수 없습니다.' },
-        });
+            });
         }
         if (existingMoment.bucket.userID !== userID) {
-        return res.status(403).json({
+            return res.status(403).json({
             success: false,
             error: { code: 403, message: '모멘트 수정 권한이 없습니다.' },
-        });
+            });
         }
-
-        // 버킷이 아직 도전 중인지 확인 (끝난 버킷이면 수정 불가)
+    
+        // 버킷이 도전 중인지 확인
         if (!existingMoment.bucket.isChallenging) {
-        return res.status(400).json({
+            return res.status(400).json({
             success: false,
             error: { code: 400, message: '이미 도전이 끝난 버킷입니다. 수정할 수 없습니다.' },
-        });
+            });
         }
-
+    
         // S3 이미지 업로드 처리
         let photoUrl = null;
         if (req.file) {
-        const bucketName = process.env.AWS_S3_BUCKET_NAME;
-        const key = `moment/${userID}/${momentID}-${Date.now()}`;
-
-        const command = new PutObjectCommand({
+            const bucketName = process.env.AWS_S3_BUCKET_NAME;
+            const key = `moment/${userID}/${momentID}-${Date.now()}`;
+    
+            // 기존 파일 삭제
+            if (existingMoment.photoUrl) {
+            const oldKey = existingMoment.photoUrl.split(`${bucketName}/`)[1];
+            await s3Client.send(
+                new DeleteObjectCommand({
+                Bucket: bucketName,
+                Key: oldKey,
+                })
+            );
+            }
+    
+            const command = new PutObjectCommand({
             Bucket: bucketName,
             Key: key,
-            Body: req.file.buffer,       // Multer가 buffer 형태로 제공
+            Body: req.file.buffer,
             ContentType: req.file.mimetype,
-        });
-
-        await s3Client.send(command);
-        photoUrl = `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+            });
+    
+            await s3Client.send(command);
+            photoUrl = `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
         }
-
+    
         // 기존 완료 상태 / 새로운 완료 상태 계산
         const oldIsCompleted = existingMoment.isCompleted;
-        let newIsCompleted = oldIsCompleted;
-
-        // (1) 사진이 올라오면 => true
-        if (photoUrl && photoUrl.trim() !== '') {
-            newIsCompleted = true;
-        }
-        // (2) 프론트가 isCompleted를 명시적으로 보내면 그대로 반영
-        if (typeof isCompleted === 'boolean') {
-            newIsCompleted = isCompleted;
-        }
-
+        let newIsCompleted = photoUrl ? true : oldIsCompleted;
+    
         // 트랜잭션
         const result = await prisma.$transaction(async (tx) => {
-        // 1) 모멘트 업데이트
-        const updatedMoment = await tx.moment.update({
+            // 1) 모멘트 업데이트
+            const updatedMoment = await tx.moment.update({
             where: { momentID },
             data: {
                 content: content ?? existingMoment.content,
@@ -215,54 +216,46 @@ export const updateMoment = async (req, res) => {
                 isCompleted: newIsCompleted,
                 updatedAt: new Date(),
             },
-        });
-
-        let updatedBucket = null;
-
-        // 2) completedMomentsCount 갱신 (false -> true)
-        //    (만약 true->false도 필요하면 else if 추가)
-        if (!oldIsCompleted && newIsCompleted) {
-            // completedMomentsCount +1
-            updatedBucket = await tx.bucket.update({
-            where: { bucketID: existingMoment.bucket.bucketID },
-            data: {
-                completedMomentsCount: {
-                    increment: 1,
-                },
-            },
             });
-        }
-
-        // 3) "모두 완료"인지 체크 (notCompletedCount=0)
-        if (newIsCompleted) {
-            const notCompletedCount = await tx.moment.count({
-            where: {
-                bucketID: existingMoment.bucket.bucketID,
-                isCompleted: false,
-            },
-            });
-            if (notCompletedCount === 0) {
-            // 버킷도 완료
-            updatedBucket = await tx.bucket.update({
+    
+            let updatedBucket = null;
+    
+            // 2) completedMomentsCount 갱신
+            if (!oldIsCompleted && newIsCompleted) {
+            // false -> true
+            await tx.bucket.update({
                 where: { bucketID: existingMoment.bucket.bucketID },
-                data: { isCompleted: true, updatedAt: new Date() },
+                data: {
+                completedMomentsCount: { increment: 1 },
+                },
             });
             }
-        }
-
+    
+            // 3) "모두 완료" 체크
+            const bucket = await tx.bucket.findUnique({
+                where: { bucketID: existingMoment.bucket.bucketID },
+                select: { completedMomentsCount: true, momentsCount: true },
+            });
+            if (bucket.completedMomentsCount === bucket.momentsCount) {
+                updatedBucket = await tx.bucket.update({
+                    where: { bucketID: existingMoment.bucket.bucketID },
+                    data: { isCompleted: true, updatedAt: new Date() },
+                });
+            }
+    
             return { updatedMoment, updatedBucket };
         });
-
+    
         return res.status(200).json({
-        success: true,
-        message: '모멘트를 달성하였습니다.',
-        moment: result.updatedMoment,
+            success: true,
+            message: '모멘트를 업데이트했습니다.',
+            moment: result.updatedMoment,
         });
-    } catch (error) {
+        } catch (error) {
         console.error('모멘트 수정 실패:', error);
         return res.status(500).json({
-        success: false,
-        error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
+            success: false,
+            error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
         });
     }
 };
