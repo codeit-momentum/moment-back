@@ -206,17 +206,17 @@ export const updateMoment = async (req, res) => {
             },
             });
     
-            let updatedBucket = null;
-    
+            
             // 2) completedMomentsCount 갱신
             if (!oldIsCompleted && newIsCompleted) {
             // false -> true
-            await tx.bucket.update({
-                where: { bucketID: existingMoment.bucket.bucketID },
-                data: {
-                    completedMomentsCount: { increment: 1 },
-                },
-            });
+                completedMomentsCount += 1; 
+                await tx.bucket.update({
+                    where: { bucketID: existingMoment.bucket.bucketID },
+                    data: {
+                        completedMomentsCount: { increment: 1 },
+                    },
+                });
             }
     
             // 3) "모두 완료" 체크
@@ -224,6 +224,7 @@ export const updateMoment = async (req, res) => {
                 where: { bucketID: existingMoment.bucket.bucketID },
                 select: { completedMomentsCount: true, momentsCount: true },
             });
+            let updatedBucket = null;
             if (bucket.completedMomentsCount === bucket.momentsCount) {
                 updatedBucket = await tx.bucket.update({
                     where: { bucketID: existingMoment.bucket.bucketID },
@@ -237,7 +238,7 @@ export const updateMoment = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: '모멘트를 업데이트했습니다.',
-            moment: result.updatedMoment,
+            result,
         });
         } catch (error) {
         console.error('모멘트 수정 실패:', error);

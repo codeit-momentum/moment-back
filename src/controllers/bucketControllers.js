@@ -96,6 +96,19 @@ export const uploadAchievementPhoto = async (req, res) => {
             isCompleted: true,  // 달성 완료
         },
         });
+        
+        // 3) "모두 완료" 체크 (completedMomentsCount === momentsCount)
+        const bucketState = await tx.bucket.findUnique({
+            where: { bucketID },
+            select: { completedMomentsCount: true, momentsCount: true },
+        });
+
+        if (bucketState.completedMomentsCount === bucketState.momentsCount) {
+            await tx.bucket.update({
+                where: { bucketID },
+                data: { isCompleted: true, updatedAt: new Date() },
+            });
+        }
 
         return res.status(200).json({
         success: true,
@@ -242,39 +255,45 @@ export const getBucketDetail = async (req, res) => {
     try {
         const userID = req.user.userID;
         const { bucketID } = req.params;
-    
-        // 버킷 + 모멘트
-        const bucket = await prisma.bucket.findUnique({
-            where: { bucketID },
-            include: {
-            moments: true, // 모멘트 배열도 함께
-            },
+
+        const result = await prisma.$transaction(async (tx) => {
+            // 버킷 + 모멘트 가져오기
+            const bucket = await tx.bucket.findUnique({
+                where: { bucketID },
+                include: { moments: true },
+            });
+
+            if (!bucket) {
+                throw new Error('버킷을 찾을 수 없습니다.');
+            }
+
+            // 소유자 체크
+            if (bucket.userID !== userID) {
+                throw new Error('버킷 조회 권한이 없습니다.');
+            }
+            // "모든 모멘트 완료" 상태 업데이트
+            const momentsCount = bucket.moments.length;
+            const completedMomentsCount = bucket.moments.filter((moment) => moment.isCompleted === true).length;
+
+            
+            if (completedMomentsCount === momentsCount && !bucket.isCompleted) {
+                await tx.bucket.update({
+                    where: { bucketID },
+                    data: { isCompleted: true, updatedAt: new Date() },
+                });
+            }
+
+            return { bucket, momentsCount, completedMomentsCount };
         });
-        if (!bucket) {
-            return res.status(404).json({
-            success: false,
-            error: { code: 404, message: '해당 버킷을 찾을 수 없습니다.' },
-            });
-        }
-    
-        // 소유자 체크
-        if (bucket.userID !== userID) {
-            return res.status(403).json({
-            success: false,
-            error: { code: 403, message: '버킷 조회 권한이 없습니다.' },
-            });
-        }
-        const momentsCount = bucket.moments.length;
-        const completedMomentsCount = bucket.moments.filter((moment) => moment.isCompleted === true).length;
-        
+
         return res.status(200).json({
             success: true,
-            bucket,
-            momentsCount,
-            completedMomentsCount,
+            bucket: result.bucket,
+            momentsCount: result.momentsCount,
+            completedMomentsCount: result.completedMomentsCount,
         });
-        } catch (error) {
-        console.error('버킷 상세 조회 실패:', error);
+    } catch (error) {
+        console.error('버킷 상세 조회 실패:', error.message);
         return res.status(500).json({
             success: false,
             error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
