@@ -179,22 +179,11 @@ export const updateMoment = async (req, res) => {
             const bucketName = process.env.AWS_S3_BUCKET_NAME;
             const key = `moment/${userID}/${momentID}-${Date.now()}`;
     
-            // 기존 파일 삭제
-            if (existingMoment.photoUrl) {
-            const oldKey = existingMoment.photoUrl.split(`${bucketName}/`)[1];
-            await s3Client.send(
-                new DeleteObjectCommand({
-                Bucket: bucketName,
-                Key: oldKey,
-                })
-            );
-            }
-    
             const command = new PutObjectCommand({
-            Bucket: bucketName,
-            Key: key,
-            Body: req.file.buffer,
-            ContentType: req.file.mimetype,
+                Bucket: bucketName,
+                Key: key,
+                Body: req.file.buffer,
+                ContentType: req.file.mimetype,
             });
     
             await s3Client.send(command);
@@ -211,9 +200,8 @@ export const updateMoment = async (req, res) => {
             const updatedMoment = await tx.moment.update({
             where: { momentID },
             data: {
-                content: content ?? existingMoment.content,
-                photoUrl: photoUrl ?? existingMoment.photoUrl,
-                isCompleted: newIsCompleted,
+                photoUrl: photoUrl,
+                isCompleted: true,
                 updatedAt: new Date(),
             },
             });
@@ -226,7 +214,7 @@ export const updateMoment = async (req, res) => {
             await tx.bucket.update({
                 where: { bucketID: existingMoment.bucket.bucketID },
                 data: {
-                completedMomentsCount: { increment: 1 },
+                    completedMomentsCount: { increment: 1 },
                 },
             });
             }
