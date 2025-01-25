@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 // 카카오 로그인 페이지로 리디렉션 (프론트에서 하는 작업) (테스트용)
 export const redirectToKakaoLogin = (req, res) => {
-    const origin = req.headers.origin || 'http://localhost:3000'; // 요청 헤더의 Origin 감지
+    const origin = req.headers.origin || 'https://codeit-momentum'; // 요청 헤더의 Origin 감지
     // 동적으로 REDIRECT_URI 설정
     const redirectUri =
         origin.includes('codeit-momentum') // 배포 환경
@@ -33,7 +33,7 @@ export const handleKakaoCallback = (req, res) => {
 
 export const kakaoLogin = async (req, res) => {
     const { code } = req.body; // 클라이언트에서 받은 인가 코드
-    const origin = req.headers.origin || 'http://localhost:3000'; // 요청 헤더의 Origin 감지
+    const origin = req.headers.origin || 'https://codeit-momentum'; // 요청 헤더의 Origin 감지
 
     const redirectUri =
         origin.includes('codeit-momentum') // 배포 환경
