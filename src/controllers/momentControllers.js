@@ -1,6 +1,6 @@
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { PrismaClient } from '@prisma/client';
-import { s3Client } from './config/s3config.js';
+import { s3Client } from '../config/s3config.js';
 
 const prisma = new PrismaClient();
 
@@ -152,8 +152,8 @@ export const updateMoment = async (req, res) => {
 
         // 모멘트+버킷 조회
         const existingMoment = await prisma.moment.findUnique({
-        where: { momentID },
-        include: { bucket: true },
+            where: { momentID },
+            include: { bucket: true },
         });
         if (!existingMoment) {
         return res.status(404).json({
@@ -199,11 +199,11 @@ export const updateMoment = async (req, res) => {
 
         // (1) 사진이 올라오면 => true
         if (photoUrl && photoUrl.trim() !== '') {
-        newIsCompleted = true;
+            newIsCompleted = true;
         }
         // (2) 프론트가 isCompleted를 명시적으로 보내면 그대로 반영
         if (typeof isCompleted === 'boolean') {
-        newIsCompleted = isCompleted;
+            newIsCompleted = isCompleted;
         }
 
         // 트랜잭션
