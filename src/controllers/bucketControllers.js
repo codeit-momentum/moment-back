@@ -281,3 +281,57 @@ export const getBucketDetail = async (req, res) => {
         });
     }
 };
+
+export const updateBucket = async (req, res) => {
+    try {
+        const userID = req.user.userID; // JWT 인증 후 주입된 값
+        const { bucketID } = req.params;
+        const { content } = req.body;
+
+      // 1) 현재 버킷 조회
+        const existingBucket = await prisma.bucket.findUnique({
+            where: { bucketID },
+        });
+        if (!existingBucket) {
+            return res.status(404).json({
+            success: false,
+            error: { code: 404, message: '해당 버킷을 찾을 수 없습니다.' },
+            });
+        }
+
+      // 2) 소유자 체크
+        if (existingBucket.userID !== userID) {
+            return res.status(403).json({
+            success: false,
+            error: { code: 403, message: '버킷 수정 권한이 없습니다.' },
+            });
+        }
+    
+      // 3) 업데이트할 데이터 준비
+      // 필요한 필드만 골라서 DB에 반영
+      // (type 변경 허용 여부는 기획에 따라)
+        const updateData = {};
+        if (typeof content === 'string') updateData.content = content;
+
+      // 4) DB 업데이트
+        const updatedBucket = await prisma.bucket.update({
+            where: { bucketID },
+            data: {
+            ...updateData,
+            updatedAt: new Date(),
+            },
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: '버킷리스트가 성공적으로 수정되었습니다.',
+            bucket: updatedBucket,
+        });
+        } catch (error) {
+        console.error('버킷 수정 실패:', error);
+        return res.status(500).json({
+            success: false,
+            error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
+        });
+    }
+};
