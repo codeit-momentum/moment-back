@@ -1,4 +1,6 @@
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { PrismaClient } from '@prisma/client';
+import { s3Client } from './config/s3config.js';
 const prisma = new PrismaClient();
 
 //버킷리스트 생성
@@ -74,7 +76,7 @@ export const createBucket = async (req, res) => {
 
         if (req.file) {
             const bucketName = process.env.AWS_S3_BUCKET_NAME;
-            const key = `moment/${userID}/${momentID}-${Date.now()}`;
+            const key = `bucket/${userID}/${bucketID}-${Date.now()}`;
 
             const command = new PutObjectCommand({
                 Bucket: bucketName,
