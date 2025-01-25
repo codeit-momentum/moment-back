@@ -11,6 +11,9 @@ export const createMoments = async (req, res) => {
         const { bucketID } = req.params;
         const { startDate, endDate, moments } = req.body;
     
+        const totalCount = moments.length; // <-- ReferenceError 해결: 제대로 변수 선언
+        const completedCount = moments.filter((m) => m.isCompleted === true).length;
+
         // 1) 요청 검증
         if (!Array.isArray(moments) || moments.length === 0) {
             return res.status(400).json({
@@ -46,29 +49,10 @@ export const createMoments = async (req, res) => {
             });
             }
         
-            const totalCount = moments.length; // <-- ReferenceError 해결: 제대로 변수 선언
-            const completedCount = moments.filter((m) => m.isCompleted === true).length;
-
             // 3) 트랜잭션
             const result = await prisma.$transaction(async (tx) => {
-            // 3-1) 버킷의 startDate, endDate 업데이트
-            //      (이미 값이 있다면 덮어쓰기, 없으면 새로 세팅)
-            const updatedBucket = await tx.bucket.update({
-                where: { bucketID },
-                data: {
-                    startDate: startDate ? new Date(startDate) : bucket.startDate,
-                    endDate: endDate ? new Date(endDate) : bucket.endDate,
-                    updatedAt: new Date(),
-                    momentsCount: {
-                        increment: totalCount,
-                        },
-                    completedMomentsCount: {
-                        increment: completedCount,
-                        },
-                },
-            });
         
-            // 3-2) 여러 모멘트 생성
+            //  여러 모멘트 생성
             const createdMoments = await Promise.all(
                 moments.map((m) =>
                 tx.moment.create({
@@ -84,6 +68,18 @@ export const createMoments = async (req, res) => {
                 })
                 )
             );
+        //  버킷의 startDate, endDate 업데이트
+            //      (이미 값이 있다면 덮어쓰기, 없으면 새로 세팅)
+            const updatedBucket = await tx.bucket.update({
+                where: { bucketID },
+                data: {
+                    startDate: startDate ? new Date(startDate) : bucket.startDate,
+                    endDate: endDate ? new Date(endDate) : bucket.endDate,
+                    updatedAt: new Date(),
+                    momentsCount: { increment: totalCount },
+                    completedMomentsCount: { increment: completedCount },
+                },
+            });
         
             return { updatedBucket, createdMoments };
             });
@@ -214,10 +210,10 @@ export const updateMoment = async (req, res) => {
         const updatedMoment = await tx.moment.update({
             where: { momentID },
             data: {
-            content: content ?? existingMoment.content,
-            photoUrl: photoUrl ?? existingMoment.photoUrl,
-            isCompleted: newIsCompleted,
-            updatedAt: new Date(),
+                content: content ?? existingMoment.content,
+                photoUrl: photoUrl ?? existingMoment.photoUrl,
+                isCompleted: newIsCompleted,
+                updatedAt: new Date(),
             },
         });
 
@@ -231,7 +227,7 @@ export const updateMoment = async (req, res) => {
             where: { bucketID: existingMoment.bucket.bucketID },
             data: {
                 completedMomentsCount: {
-                increment: 1,
+                    increment: 1,
                 },
             },
             });
@@ -254,7 +250,7 @@ export const updateMoment = async (req, res) => {
             }
         }
 
-        return { updatedMoment, updatedBucket };
+            return { updatedMoment, updatedBucket };
         });
 
         return res.status(200).json({

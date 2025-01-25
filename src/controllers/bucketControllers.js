@@ -258,10 +258,14 @@ export const getBucketDetail = async (req, res) => {
             error: { code: 403, message: '버킷 조회 권한이 없습니다.' },
             });
         }
-    
+        const momentsCount = bucket.moments.length;
+        const completedMomentsCount = bucket.moments.filter((moment) => moment.isCompleted === true).length;
+        
         return res.status(200).json({
             success: true,
             bucket,
+            momentsCount,
+            completedMomentsCount,
         });
         } catch (error) {
         console.error('버킷 상세 조회 실패:', error);
