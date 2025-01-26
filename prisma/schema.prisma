@@ -42,8 +42,8 @@ model Friend {
   fixedAt      DateTime?
   knockedAt    DateTime?
   createdAt    DateTime  @default(now())
-  user         User      @relation("UserFriend", fields: [userID], references: [userID], onDelete: Cascade) // 친구 관계의 주체
-  friendUser   User      @relation("FriendUser", fields: [friendUserID], references: [userID], onDelete: Cascade) // 친구 관계의 대상
+  user         User      @relation("UserFriend", fields: [userID], references: [userID]) // 친구 관계의 주체
+  friendUser   User      @relation("FriendUser", fields: [friendUserID], references: [userID]) // 친구 관계의 대상
 
   @@unique([userID, friendUserID], name: "userID_friendUserID") // 동일한 사용자 간 중복 친구 관계 방지
 }
@@ -53,7 +53,7 @@ model Feed {
   userID    String // 사용자 ID 참조
   content   String
   createdAt DateTime @default(now())
-  user      User     @relation("UserFeeds", fields: [userID], references: [userID], onDelete: Cascade)
+  user      User     @relation("UserFeeds", fields: [userID], references: [userID])
 }
 
 model FriendFeed {
@@ -91,7 +91,7 @@ model Notification {
   createdAt      DateTime         @default(now())
   isRead         Boolean          @default(false)
   userID         String
-  user           User             @relation("UserNotifications", fields: [userID], references: [userID], onDelete: Cascade)
+  user           User             @relation("UserNotifications", fields: [userID], references: [userID])
 }
 
 enum NotificationType {
