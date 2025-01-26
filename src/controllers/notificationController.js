@@ -5,13 +5,27 @@ const prisma = new PrismaClient();
 
 
 // 새 알림 개수 가져오기 
-export const getUnreadNotificationsCount = async () => {
+export const getUnreadNotificationsCount = async (userID) => {
     try {
-        const count = await prisma.notification.count({
-            where: { isRead: false }
-        });
+      // 현재 사용자 조회
+      const currentUser = await prisma.user.findUnique({
+        where: { userID },
+      });
 
-        return count;
+      if (!currentUser) { 
+        console.error("사용자 찾을 수 없음")
+        return res.status(404).json({ 
+          success: false,
+          error: { code: 404, message: '현재 사용자를 찾을 수 없습니다.' }
+        });
+      }
+
+      const count = await prisma.notification.count({
+        where: { userID, isRead: false }
+      });
+
+      return count;
+
     } catch (error) {
         console.error('읽지 않은 알림 개수 호출 실패:', error)
         return 0;
@@ -19,16 +33,12 @@ export const getUnreadNotificationsCount = async () => {
 };
 
 // Websocket을 통해 실시간 알림 개수 전송 
-export const sendUnreadNotificationsCount = async (wss) => {
-    const count = await getUnreadNotificationsCount();
-
-    console.log(`Unread notifications count: ${count}`);
+export const sendUnreadNotificationsCount = async (userID, wss) => {
+    const count = await getUnreadNotificationsCount(userID);
 
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
-            console.log('Hi');
             client.send(JSON.stringify({ type: 'newNotificationCount', count }));
-            console.log('Sent unread count to client');
         }
     });
 };

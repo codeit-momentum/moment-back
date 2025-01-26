@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "type": "module",
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  } ,
   "scripts": {
     "test": "jest",
     "dev": "nodemon src/server.js",
