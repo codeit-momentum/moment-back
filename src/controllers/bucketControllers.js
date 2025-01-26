@@ -51,16 +51,16 @@ export const uploadAchievementPhoto = async (req, res) => {
 
         const bucket = await prisma.bucket.findUnique({ where: { bucketID } });
         if (!bucket) {
-        return res.status(404).json({
-            success: false,
-            error: { code: 404, message: '버킷을 찾을 수 없습니다.' },
-        });
+            return res.status(404).json({
+                success: false,
+                error: { code: 404, message: '버킷을 찾을 수 없습니다.' },
+            });
         }
         if (bucket.userID !== userID) {
-        return res.status(403).json({
-            success: false,
-            error: { code: 403, message: '버킷 수정 권한이 없습니다.' },
-        });
+            return res.status(403).json({
+                success: false,
+                error: { code: 403, message: '버킷 수정 권한이 없습니다.' },
+            });
         }
 
         // 달성형인지
@@ -76,7 +76,7 @@ export const uploadAchievementPhoto = async (req, res) => {
 
         if (req.file) {
             const bucketName = process.env.AWS_S3_BUCKET_NAME;
-            const key = `bucket/${userID}/${bucketID}-${Date.now()}`;
+            const key = `bucket/${userID}/${bucketID}/${Date.now()}`;
 
             const command = new PutObjectCommand({
                 Bucket: bucketName,
@@ -92,24 +92,24 @@ export const uploadAchievementPhoto = async (req, res) => {
         const updatedBucket = await prisma.bucket.update({
         where: { bucketID },
         data: {
-            photoUrl: req.file.location,
+            photoUrl: photoUrl,
             isCompleted: true,  // 달성 완료
         },
         });
 
         return res.status(200).json({
-        success: true,
-        message: '달성형 버킷이 인증되어 완료 처리되었습니다.',
-        bucket: updatedBucket,
+            success: true,
+            message: '달성형 버킷이 인증되어 완료 처리되었습니다.',
+            bucket: updatedBucket,
         });
     } catch (error) {
         console.error('달성형 버킷 인증사진 업로드 실패:', error);
         return res.status(500).json({
-        success: false,
-        error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
+            success: false,
+            error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
         });
     }
-    };
+};
 
 
 /**
@@ -195,6 +195,12 @@ export const deactivateBucketChallenge = async (req, res) => {
         if (bucket.userID !== userID) {
             return res.status(403).json({ success: false, error: { code: 403, message: '권한 없음' }});
         }
+        if (bucket.type !== 'REPEAT') {
+            return res.status(400).json({
+                success: false,
+                error: { code: 400, message: '달성형 버킷은 도전 안함으로 설정할 수 없습니다.' },
+            });
+        }
         if (!bucket.isChallenging) {
             return res.status(400).json({
                 success: false,
@@ -236,35 +242,126 @@ export const getBucketDetail = async (req, res) => {
     try {
         const userID = req.user.userID;
         const { bucketID } = req.params;
-    
-        // 버킷 + 모멘트
-        const bucket = await prisma.bucket.findUnique({
-            where: { bucketID },
-            include: {
-            moments: true, // 모멘트 배열도 함께
-            },
+
+        const result = await prisma.$transaction(async (tx) => {
+            // 버킷 + 모멘트 가져오기
+            const bucket = await tx.bucket.findUnique({
+                where: { bucketID },
+                include: { moments: true },
+            });
+
+            if (!bucket) {
+                throw new Error('버킷을 찾을 수 없습니다.');
+            }
+
+            // 소유자 체크
+            if (bucket.userID !== userID) {
+                throw new Error('버킷 조회 권한이 없습니다.');
+            }
+            // "모든 모멘트 완료" 상태 업데이트
+            const momentsCount = bucket.moments.length;
+            const completedMomentsCount = bucket.moments.filter((moment) => moment.isCompleted === true).length;
+
+            
+            if (completedMomentsCount === momentsCount && !bucket.isCompleted) {
+                await tx.bucket.update({
+                    where: { bucketID },
+                    data: { isCompleted: true, updatedAt: new Date() },
+                });
+            }
+
+            return { bucket, momentsCount, completedMomentsCount };
         });
-        if (!bucket) {
+
+        return res.status(200).json({
+            success: true,
+            bucket: result.bucket,
+            momentsCount: result.momentsCount,
+            completedMomentsCount: result.completedMomentsCount,
+        });
+    } catch (error) {
+        console.error('버킷 상세 조회 실패:', error.message);
+        return res.status(500).json({
+            success: false,
+            error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
+        });
+    }
+};
+
+export const updateBucket = async (req, res) => {
+    try {
+        const userID = req.user.userID; // JWT 인증 후 주입된 값
+        const { bucketID } = req.params;
+        const { content } = req.body;
+
+      // 1) 현재 버킷 조회
+        const existingBucket = await prisma.bucket.findUnique({
+            where: { bucketID },
+        });
+        if (!existingBucket) {
             return res.status(404).json({
             success: false,
             error: { code: 404, message: '해당 버킷을 찾을 수 없습니다.' },
             });
         }
-    
-        // 소유자 체크
-        if (bucket.userID !== userID) {
+
+      // 2) 소유자 체크
+        if (existingBucket.userID !== userID) {
             return res.status(403).json({
             success: false,
-            error: { code: 403, message: '버킷 조회 권한이 없습니다.' },
+            error: { code: 403, message: '버킷 수정 권한이 없습니다.' },
             });
         }
     
+      // 3) 업데이트할 데이터 준비
+      // 필요한 필드만 골라서 DB에 반영
+      // (type 변경 허용 여부는 기획에 따라)
+        const updateData = {};
+        if (typeof content === 'string') updateData.content = content;
+
+      // 4) DB 업데이트
+        const updatedBucket = await prisma.bucket.update({
+            where: { bucketID },
+            data: {
+            ...updateData,
+            updatedAt: new Date(),
+            },
+        });
+
         return res.status(200).json({
             success: true,
-            bucket,
+            message: '버킷리스트가 성공적으로 수정되었습니다.',
+            bucket: updatedBucket,
         });
         } catch (error) {
-        console.error('버킷 상세 조회 실패:', error);
+        console.error('버킷 수정 실패:', error);
+        return res.status(500).json({
+            success: false,
+            error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
+        });
+    }
+};
+
+// 완료된 버킷리스트 개수 출력
+export const getCompletedBuckets = async (req, res) => {
+    try {
+        const userID = req.user.userID;
+    
+        // `isCompleted: true`인 버킷리스트 개수 조회
+        const completedCount = await prisma.bucket.count({
+            where: {
+                userID,
+                isCompleted: true,
+            },
+        });
+    
+        return res.status(200).json({
+            success: true,
+            message: '달성된 버킷리스트 개수 조회 성공',
+            completedCount,
+        });
+        } catch (error) {
+        console.error('달성된 버킷리스트 개수 조회 실패:', error);
         return res.status(500).json({
             success: false,
             error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },

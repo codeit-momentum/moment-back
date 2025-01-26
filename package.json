@@ -31,7 +31,8 @@
     "mongoose": "^8.9.5",
     "multer": "^1.4.5-lts.1",
     "node-cron": "^3.0.3",
-    "nvm": "^0.0.4"
+    "nvm": "^0.0.4",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",

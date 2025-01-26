@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import moment from 'moment';
 import cron from 'node-cron';
+
 const prisma = new PrismaClient();
 
 
@@ -93,7 +94,7 @@ export const addFriend = async (req, res) => {
       return res.status(409).json({ message: '이미 친구 관계입니다.' });
     }
 
-    // 즉시 친구 관계 생성 (친구 요청 패스스)
+    // 즉시 친구 관계 생성 (친구 요청 패스)
     await prisma.friend.createMany({
       data: [
         {
@@ -105,6 +106,32 @@ export const addFriend = async (req, res) => {
           friendUserID: requesterID,
         },
       ],
+    });
+    
+    // 친구 요청한 유저 
+    const user = prisma.user.findUnique({
+      where: { userID : requesterID }
+    });
+    
+    // 친구 요청 받은 유저 
+    const friend = prisma.user.findUnique({
+      where: { userID : receiverID }
+    });
+    
+    // 친구 생성 알림 추가 
+    await prisma.notification.create({
+      data: [
+        {
+          userID: requesterID,
+          type: 'FRIEND',
+          content: `${friend.nickname}님과 친구가 되었어요!`,
+        },
+        {
+          userID: receiverID,
+          type: 'FRIEND',
+          content: `${user.nickname}님과 친구가 되었어요!`,
+        },
+      ]
     });
 
     res.status(201).json({
@@ -219,6 +246,20 @@ export const knockFriend = async (req, res) => {
         isKnock: true
       }
     });
+    
+    // 노크한 유저 
+    const user = prisma.user.findUnique({
+      where: { userID }
+    });
+
+    // 친구 노크 알림 추가 
+    await prisma.notification.create({
+      data: {
+        userID: friendRelation.id,
+        type: 'KNOCK',
+        content: `${user.nickname}님이 말해요, 피드가 조용해서 심심하대요!`,
+      }
+    });
 
     res.status(200).json({ status: "success", message: "노크 알림이 전송되었습니다." });
   } catch (err) {
@@ -252,6 +293,25 @@ export const cheerOnFriendFeed = async (req, res) => {
         userID: userID,
         feedID: feedID,
         cheer: true
+      }
+    });
+    
+    // 응원한 유저 
+    const user = prisma.user.findUnique({
+      where: { userID }
+    });
+    
+    // 응원받은 피드 
+    const feed = prisma.feed.findUnique({
+      where: { feedID }
+    })
+
+    // 친구 피드 응원 알림 추가 
+    await prisma.notification.create({
+      data: {
+        userID: feed.userID,
+        type: 'CHEER',
+        content: `${user.nickname}님이 피드를 응원합니다.`,
       }
     });
 
