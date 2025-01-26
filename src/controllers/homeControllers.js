@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import { startOfWeek, endOfWeek, parseISO } from "date-fns";
 
 const prisma = new PrismaClient();
 
@@ -49,109 +48,6 @@ export const getHome = async (req, res) => {
       });
     }
   };
-
-// 알림 조회 및 새 알림 표시 
-export const getNotifications = async (req, res) => {
-  try {
-    const userID = req.user.userID; // 현재 사용자 ID
-
-    // 현재 사용자 조회
-    const currentUser = await prisma.user.findUnique({
-      where: { userID },
-    });
-
-    if (!currentUser) { 
-      return res.status(404).json({ 
-        success: false,
-        error: { code: 404, message: '현재 사용자를 찾을 수 없습니다.' }
-      });
-    }
-    
-    // 사용자의 알림 조회 
-    const notifications = await prisma.notification.findMany({
-      where: { userID },
-      orderBy: { createdAt: 'desc' },
-      select: {
-        notificationID: true,
-        type: true,
-        content: true,
-        createdAt: true,
-        isRead: true
-      }
-    });
-
-    // 사용자의 새로운 알림 개수 표시 
-    const newNotificationsCount = await prisma.notification.count({
-      where: {
-        userID,
-        isRead: false // 읽지 않은 알림만 조회
-      }
-    });
-
-    return res.status(200).json({
-      success: true,
-      messages: "알림 목록을 조회하는데 성공하였습니다.",
-      user: currentUser.userID,
-      notifications: notifications,
-      unreadCount: newNotificationsCount,
-    })
-  } catch (err) {
-    console.error('알림 조회 실패:', err.message);
-    res.status(500).json({ 
-      success: false,
-      error: { code: 500, message: '알림 조회를 하는 데 실패하였습니다.' }
-    });
-  }
-};
-
-// 알림 읽음 처리 
-export const markNotificationAsRead = async (req, res) => {
-  const userID = req.user.userID; // 인증된 사용자 ID
-  const { notificationID } = req.params; 
-
-  try {
-
-    // 알림 조회 
-    const notification = await prisma.notification.findUnique({
-      where: { notificationID: notificationID }
-    });
-
-    // 유저가 본인의 알림인지 확인
-    if (notification.userID !== userID) {
-      return res.status(403).json({
-        success: false,
-        error: { code: 403, message: "해당 알림에 대한 권한이 없습니다." }
-      });
-    }
-    
-    // 알림이 존재하는지 확인 
-    if (!notification) {
-      return res.status(404).json({
-        success: false,
-        error: { code: 404, message: "해당 알림을 찾을 수 없습니다." }
-      });
-    }
-    
-    // 알림 읽음으로 업데이트 
-    const updatedNotification = await prisma.notification.update({
-      where: { notificationID: notificationID },
-      data: { isRead: true }
-    });
-
-    return res.status(200).json({
-      success: true,
-      messages: "알림이 성공적으로 읽음 처리되었습니다.",
-      notification: updatedNotification
-    });
-
-  } catch (err) {
-    console.error("알림 읽음 처리 실패:", err.message);
-    return res.status(500).json({
-      success: false,
-      error: { code: 500, message: "서버 내부 오류가 발생했습니다." }
-    });
-  }
-};
   
 // 당일 모먼트 완료 조회 
 export const getCompletedMomentsByDay = async (req, res) => {
@@ -220,4 +116,3 @@ export const getCompletedMomentsByDay = async (req, res) => {
   }
 };
 
-// 버킷리스트 달성 현황 
