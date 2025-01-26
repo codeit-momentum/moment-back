@@ -6,3 +6,4 @@ https/
 .env.production
 seed.js
 prisma.js
+mongodb.js
