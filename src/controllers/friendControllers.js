@@ -249,7 +249,7 @@ export const knockFriend = async (req, res) => {
     });
     
     // 노크한 유저 
-    const user = prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { userID }
     });
 
@@ -298,21 +298,25 @@ export const cheerOnFriendFeed = async (req, res) => {
     });
     
     // 응원한 유저 
-    const user = prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { userID }
     });
     
-    // 응원받은 피드 
-    const feed = prisma.feed.findUnique({
+    const feed = await prisma.feed.findUnique({
       where: { feedID }
-    })
+    });
+
+    // 응원받은 유저 
+    const friend = await prisma.user.findUnique({
+      where: { userID : feed.userID}
+    });
 
     // 친구 피드 응원 알림 추가 
     await prisma.notification.create({
       data: {
-        userID: feed.userID,
+        userID: friend.userID,
         type: 'CHEER',
-        content: `${user.nickname}님이 피드를 응원합니다.`,
+        content: `${user.nickname}님이 ${friend.nickname}님의 ${feed.content} 달성을 응원한대요!`,
       }
     });
 
