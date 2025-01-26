@@ -246,3 +246,43 @@ export const updateMoment = async (req, res) => {
         });
     }
 };
+
+export const getDetailMoment = async (req, res) => {
+    try {
+        const userID = req.user.userID; // 인증된 사용자 ID
+        const { momentID } = req.params; // 요청된 momentID
+
+        // 모멘트 조회
+        const moment = await prisma.moment.findUnique({
+            where: { momentID },
+            include: { bucket: true }, // 관련된 버킷 정보를 포함
+        });
+
+        // 모멘트가 존재하지 않을 경우 처리
+        if (!moment) {
+            return res.status(404).json({
+                success: false,
+                error: { code: 404, message: '모멘트를 찾을 수 없습니다.' },
+            });
+        }
+
+        // 소유자 확인
+        if (moment.userID !== userID) {
+            return res.status(403).json({
+                success: false,
+                error: { code: 403, message: '모멘트 상세 정보를 확인할 권한이 없습니다.' },
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            moment,
+        });
+    } catch (err) {
+        console.error('모멘트 상세 조회 실패:', error);
+        return res.status(500).json({
+            success: false,
+            error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
+        });
+    }
+}
