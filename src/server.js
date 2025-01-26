@@ -52,5 +52,9 @@ setInterval(() => {
 
 server.listen(PORT, async () => {
     console.log(`Server running on http://localhost:${PORT}`);
+<<<<<<< HEAD
     await checkS3Connection(); // S3 연결 확인 
+=======
+    await checkS3Connection(); // S3 연결 확인인
+>>>>>>> f3ab522baac8deff0cbff730f80fd8416fc20630
 });

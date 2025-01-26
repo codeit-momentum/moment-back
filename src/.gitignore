@@ -1,4 +1,7 @@
 .env
+<<<<<<< HEAD
 .env.production
 .env.development
+=======
+>>>>>>> f3ab522baac8deff0cbff730f80fd8416fc20630
 package-lock.json

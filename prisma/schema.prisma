@@ -123,6 +123,12 @@ model Bucket {
 }
 
 enum BucketType {
+<<<<<<< HEAD
   REPEAT // 반복형
   ACHIEVEMENT // 달성형
 }
+=======
+  GOAL // 달성형
+  RECURRING // 반복형 
+}
+>>>>>>> f3ab522baac8deff0cbff730f80fd8416fc20630
