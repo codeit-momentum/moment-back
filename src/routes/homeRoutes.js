@@ -15,6 +15,5 @@ router.get('', getHome); // 홈 목록 조회
 router.patch('/notifications', getAndMarkNotificationsAsRead); // 알림 조회 및 읽음 처리  
 // router.get('/momentsComplete/week', getCompletedMomentsByWeek); // 요일별 인증 확인 
 router.get('/momentsComplete/day', getCompletedMomentsByDay); // 당일 인증 확인 
-router.get('/bucket', getBucketListStatus); // 버킷리스트 달성 현황
 
 export default router;
