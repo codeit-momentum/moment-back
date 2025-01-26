@@ -1,7 +1,9 @@
+node_modules/
+https/
 .env
-<<<<<<< HEAD
-.env.production
+.env.*
 .env.development
-=======
->>>>>>> f3ab522baac8deff0cbff730f80fd8416fc20630
-package-lock.json
+.env.production
+seed.js
+prisma.js
+mongoDB.js
