@@ -1,9 +1,5 @@
 import express from 'express';
-<<<<<<< HEAD
 import { getCompletedMomentsByDay, getHome } from '../controllers/homeControllers.js';
-=======
-import { getCompletedMomentsByDay, getCompletedMomentsByWeek, getHome, getNotifications, markNotificationAsRead, getBucketListStatus } from '../controllers/homeControllers.js';
->>>>>>> f3ab522baac8deff0cbff730f80fd8416fc20630
 import { jwtMiddleware } from '../middlewares/jwtMiddlewares.js';
 import { getAndMarkNotificationsAsRead } from '../controllers/notificationController.js';
 // import { prismaMiddleware } from '../middlewares/prismaMiddlewares.js';

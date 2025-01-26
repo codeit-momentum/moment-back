@@ -316,7 +316,7 @@ export const cheerOnFriendFeed = async (req, res) => {
       data: {
         userID: friend.userID,
         type: 'CHEER',
-        content: `${user.nickname}님이 ${friend.nickname}님의 ${feed.content} 달성을 응원한대요!`,
+        content: `${user.nickname}님이 ${friend.nickname}님의 "${feed.content}" 달성을 응원한대요!`,
       }
     });
 
