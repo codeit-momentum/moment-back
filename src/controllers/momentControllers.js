@@ -20,55 +20,55 @@ export const createMoments = async (req, res) => {
                 success: false,
                 error: { code: 400, message: 'moments 배열이 비어 있습니다.' },
             });
-            }
+        }
         
-            // 2) 버킷 조회
-            const bucket = await prisma.bucket.findUnique({ where: { bucketID } });
-            if (!bucket) {
+        // 2) 버킷 조회
+        const bucket = await prisma.bucket.findUnique({ where: { bucketID } });
+        if (!bucket) {
             return res.status(404).json({
                 success: false,
                 error: { code: 404, message: '해당 버킷을 찾을 수 없습니다.' },
             });
-            }
-            // 소유자 체크
-            if (bucket.userID !== userID) {
+        }
+        // 소유자 체크
+        if (bucket.userID !== userID) {
             return res.status(403).json({
                 success: false,
                 error: { code: 403, message: '버킷 소유자가 아닙니다.' },
             });
-            }
+        }
     
         //버킷 상태 체크: 반복형 + 도전 중
         if (bucket.type !== 'REPEAT' || !bucket.isChallenging) {
             return res.status(400).json({
                 success: false,
-            error: {
-                code: 400,
-                message: '모멘트를 추가할 수 없는 버킷입니다. (반복형 + 도전 중이어야 함)',
-            },
+                error: {
+                    code: 400,
+                    message: '모멘트를 추가할 수 없는 버킷입니다. (반복형 + 도전 중이어야 함)',
+                },
             });
-            }
+        }
         
-            // 3) 트랜잭션
-            const result = await prisma.$transaction(async (tx) => {
+        // 3) 트랜잭션
+        const result = await prisma.$transaction(async (tx) => {
         
             //  여러 모멘트 생성
             const createdMoments = await Promise.all(
                 moments.map((m) =>
-                tx.moment.create({
-                    data: {
-                    content: m.content || '',
-                    photoUrl: null,
-                    isCompleted: false,
-                    startDate: new Date(m.startDate),
-                    endDate: new Date(m.endDate),
-                    bucketID: bucketID,
-                    userID: userID,
-                    },
-                })
+                    tx.moment.create({
+                        data: {
+                            content: m.content || '',
+                            photoUrl: null,
+                            isCompleted: false,
+                            startDate: new Date(m.startDate),
+                            endDate: new Date(m.endDate),
+                            bucketID: bucketID,
+                            userID: userID,
+                        },
+                    })
                 )
             );
-        //  버킷의 startDate, endDate 업데이트
+            //  버킷의 startDate, endDate 업데이트
             //      (이미 값이 있다면 덮어쓰기, 없으면 새로 세팅)
             const updatedBucket = await tx.bucket.update({
                 where: { bucketID },
@@ -80,24 +80,24 @@ export const createMoments = async (req, res) => {
                     completedMomentsCount: { increment: completedCount },
                 },
             });
-        
+            
             return { updatedBucket, createdMoments };
-            });
+        });
         
-            return res.status(201).json({
-                success: true,
-                message: '버킷 기간이 설정되고, 모멘트들이 생성되었습니다.',
-                bucket: result.updatedBucket,
-                moments: result.createdMoments,
-                momentsCount: totalCount, 
-            });
-        } catch (error) {
-            console.error('버킷 날짜 & 모멘트 벌크 생성 실패:', error);
-            return res.status(500).json({
+        return res.status(201).json({
+            success: true,
+            message: '버킷 기간이 설정되고, 모멘트들이 생성되었습니다.',
+            bucket: result.updatedBucket,
+            moments: result.createdMoments,
+            momentsCount: totalCount, 
+        });
+    } catch (error) {
+        console.error('버킷 날짜 & 모멘트 벌크 생성 실패:', error);
+        return res.status(500).json({
             success: false,
             error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
-            });
-        }
+        });
+    }
 };
 
 // 모멘트 조회
@@ -110,6 +110,7 @@ export const getMomentsByBucket = async (req, res) => {
         const bucket = await prisma.bucket.findUnique({
             where: { bucketID },
         });
+
         if (!bucket) {
             return res.status(404).json({
             success: false,
@@ -117,6 +118,13 @@ export const getMomentsByBucket = async (req, res) => {
             });
         }
 
+        // 소유자 체크
+        if (bucket.userID !== userID) {
+            return res.status(403).json({
+                success: false,
+                error: { code: 403, message: '버킷 소유자가 아닙니다.' },
+            });
+        }
 
         //모멘트 목록 조회
         const moments = await prisma.moment.findMany({
@@ -145,8 +153,7 @@ export const updateMoment = async (req, res) => {
     try {
         const userID = req.user.userID;
         const { momentID } = req.params;
-        const { content } = req.body;
-    
+
         // 모멘트+버킷 조회
         const existingMoment = await prisma.moment.findUnique({
             where: { momentID },
@@ -154,22 +161,22 @@ export const updateMoment = async (req, res) => {
         });
         if (!existingMoment) {
             return res.status(404).json({
-            success: false,
-            error: { code: 404, message: '모멘트를 찾을 수 없습니다.' },
+                success: false,
+                error: { code: 404, message: '모멘트를 찾을 수 없습니다.' },
             });
         }
         if (existingMoment.bucket.userID !== userID) {
             return res.status(403).json({
-            success: false,
-            error: { code: 403, message: '모멘트 수정 권한이 없습니다.' },
+                success: false,
+                error: { code: 403, message: '모멘트 수정 권한이 없습니다.' },
             });
         }
     
         // 버킷이 도전 중인지 확인
         if (!existingMoment.bucket.isChallenging) {
             return res.status(400).json({
-            success: false,
-            error: { code: 400, message: '이미 도전이 끝난 버킷입니다. 수정할 수 없습니다.' },
+                success: false,
+                error: { code: 400, message: '이미 도전이 끝난 버킷입니다. 수정할 수 없습니다.' },
             });
         }
     
@@ -177,7 +184,7 @@ export const updateMoment = async (req, res) => {
         let photoUrl = null;
         if (req.file) {
             const bucketName = process.env.AWS_S3_BUCKET_NAME;
-            const key = `moment/${userID}/${momentID}-${Date.now()}`;
+            const key = `moment/${userID}/${momentID}/${Date.now()}`;
     
             const command = new PutObjectCommand({
                 Bucket: bucketName,
@@ -240,7 +247,7 @@ export const updateMoment = async (req, res) => {
             message: '모멘트를 업데이트했습니다.',
             result,
         });
-        } catch (error) {
+    } catch (error) {
         console.error('모멘트 수정 실패:', error);
         return res.status(500).json({
             success: false,
