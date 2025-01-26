@@ -93,7 +93,7 @@ export const addFriend = async (req, res) => {
       return res.status(409).json({ message: '이미 친구 관계입니다.' });
     }
 
-    // 즉시 친구 관계 생성 (친구 요청 패스스)
+    // 즉시 친구 관계 생성 (친구 요청 패스)
     await prisma.friend.createMany({
       data: [
         {

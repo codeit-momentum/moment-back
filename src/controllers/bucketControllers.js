@@ -51,16 +51,16 @@ export const uploadAchievementPhoto = async (req, res) => {
 
         const bucket = await prisma.bucket.findUnique({ where: { bucketID } });
         if (!bucket) {
-        return res.status(404).json({
-            success: false,
-            error: { code: 404, message: '버킷을 찾을 수 없습니다.' },
-        });
+            return res.status(404).json({
+                success: false,
+                error: { code: 404, message: '버킷을 찾을 수 없습니다.' },
+            });
         }
         if (bucket.userID !== userID) {
-        return res.status(403).json({
-            success: false,
-            error: { code: 403, message: '버킷 수정 권한이 없습니다.' },
-        });
+            return res.status(403).json({
+                success: false,
+                error: { code: 403, message: '버킷 수정 권한이 없습니다.' },
+            });
         }
 
         // 달성형인지
@@ -96,30 +96,17 @@ export const uploadAchievementPhoto = async (req, res) => {
             isCompleted: true,  // 달성 완료
         },
         });
-        
-        // 3) "모두 완료" 체크 (completedMomentsCount === momentsCount)
-        const bucketState = await tx.bucket.findUnique({
-            where: { bucketID },
-            select: { completedMomentsCount: true, momentsCount: true },
-        });
-
-        if (bucketState.completedMomentsCount === bucketState.momentsCount) {
-            await tx.bucket.update({
-                where: { bucketID },
-                data: { isCompleted: true, updatedAt: new Date() },
-            });
-        }
 
         return res.status(200).json({
-        success: true,
-        message: '달성형 버킷이 인증되어 완료 처리되었습니다.',
-        bucket: updatedBucket,
+            success: true,
+            message: '달성형 버킷이 인증되어 완료 처리되었습니다.',
+            bucket: updatedBucket,
         });
     } catch (error) {
         console.error('달성형 버킷 인증사진 업로드 실패:', error);
         return res.status(500).json({
-        success: false,
-        error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
+            success: false,
+            error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
         });
     }
 };
@@ -355,6 +342,7 @@ export const updateBucket = async (req, res) => {
     }
 };
 
+// 완료된 버킷리스트 개수 출력
 export const getCompletedBuckets = async (req, res) => {
     try {
         const userID = req.user.userID;
