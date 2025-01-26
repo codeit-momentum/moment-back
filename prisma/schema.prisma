@@ -110,8 +110,6 @@ model Bucket {
   isCompleted   Boolean?    @default(false) // 달성형이 완료됐는지
 
   isChallenging Boolean     @default(false)
-  momentsCount          Int @default(0)
-  completedMomentsCount Int @default(0)
   startDate     DateTime?   @default(now())
   endDate       DateTime?   @default("2025-12-31T00:00:00.000Z") 
   createdAt     DateTime    @default(now())
