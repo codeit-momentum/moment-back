@@ -10,9 +10,6 @@ export const createMoments = async (req, res) => {
         const userID = req.user.userID;
         const { bucketID } = req.params;
         const { startDate, endDate, moments } = req.body;
-    
-        const totalCount = moments.length; // <-- ReferenceError 해결: 제대로 변수 선언
-        const completedCount = moments.filter((m) => m.isCompleted === true).length;
 
         // 1) 요청 검증
         if (!Array.isArray(moments) || moments.length === 0) {
@@ -76,8 +73,6 @@ export const createMoments = async (req, res) => {
                     startDate: startDate ? new Date(startDate) : bucket.startDate,
                     endDate: endDate ? new Date(endDate) : bucket.endDate,
                     updatedAt: new Date(),
-                    momentsCount: { increment: totalCount },
-                    completedMomentsCount: { increment: completedCount },
                 },
             });
             
@@ -89,7 +84,6 @@ export const createMoments = async (req, res) => {
             message: '버킷 기간이 설정되고, 모멘트들이 생성되었습니다.',
             bucket: result.updatedBucket,
             moments: result.createdMoments,
-            momentsCount: totalCount, 
         });
     } catch (error) {
         console.error('버킷 날짜 & 모멘트 벌크 생성 실패:', error);
@@ -199,47 +193,44 @@ export const updateMoment = async (req, res) => {
     
         // 기존 완료 상태 / 새로운 완료 상태 계산
         const oldIsCompleted = existingMoment.isCompleted;
-        let newIsCompleted = photoUrl ? true : oldIsCompleted;
+        const newIsCompleted = photoUrl ? true : oldIsCompleted;
     
         // 트랜잭션
         const result = await prisma.$transaction(async (tx) => {
             // 1) 모멘트 업데이트
             const updatedMoment = await tx.moment.update({
-            where: { momentID },
-            data: {
-                photoUrl: photoUrl,
-                isCompleted: true,
-                updatedAt: new Date(),
-            },
+                where: { momentID },
+                data: {
+                    photoUrl: photoUrl,
+                    isCompleted: true,
+                    updatedAt: new Date(),
+                },
             });
     
             
-            // 2) completedMomentsCount 갱신
-            if (!oldIsCompleted && newIsCompleted) {
-            // false -> true
-                completedMomentsCount += 1; 
-                await tx.bucket.update({
-                    where: { bucketID: existingMoment.bucket.bucketID },
-                    data: {
-                        completedMomentsCount: { increment: 1 },
-                    },
-                });
-            }
-    
-            // 3) "모두 완료" 체크
-            const bucket = await tx.bucket.findUnique({
-                where: { bucketID: existingMoment.bucket.bucketID },
-                select: { completedMomentsCount: true, momentsCount: true },
+            // 2) 버킷 아래 모든 모멘트 완료 여부 확인
+            const bucketID = existingMoment.bucket.bucketID;
+
+            // 전체 모멘트 개수
+            const totalMoments = await tx.moment.count({
+                where: { bucketID },
             });
+
+            // 완료된 모멘트 개수
+            const completedMoments = await tx.moment.count({
+                where: { bucketID, isCompleted: true },
+            });
+
             let updatedBucket = null;
-            if (bucket.completedMomentsCount === bucket.momentsCount) {
+            // 모든 모멘트가 완료되었으면 버킷도 완료 상태로 업데이트
+            if (totalMoments > 0 && totalMoments === completedMoments) {
                 updatedBucket = await tx.bucket.update({
-                    where: { bucketID: existingMoment.bucket.bucketID },
+                    where: { bucketID },
                     data: { isCompleted: true, updatedAt: new Date() },
                 });
             }
-    
-            return { updatedMoment, updatedBucket };
+
+            return { updatedMoment, updatedBucket, totalMoments, completedMoments };
         });
     
         return res.status(200).json({
