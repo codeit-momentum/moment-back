@@ -120,6 +120,17 @@ export const getMomentsByBucket = async (req, res) => {
             });
         }
 
+        // 버킷 타입 체크 (ACHIEVEMENT이면 조회 불가)
+        if (bucket.type === 'ACHIEVEMENT') {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 400,
+                    message: '이 버킷은 반복형(REPEAT) 버킷만 조회할 수 있습니다.',
+                },
+            });
+        }
+
         //모멘트 목록 조회
         const moments = await prisma.moment.findMany({
             where: { bucketID },
