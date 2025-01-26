@@ -51,6 +51,40 @@ export const getFriends = async (req, res) => {
   }
 };
 
+
+// 친구추가 전 친구 닉네임 GET
+export const checkFriendCode = async (req, res) => {
+  const { friendCode } = req.body; // 클라이언트로부터 받은 친구 코드
+
+  // 친구코드가 없는 경우 에러 반환
+  if (!friendCode) {
+    return res.status(400).json({ message: '친구코드가 필요합니다.' });
+  }
+
+  try {
+    // 친구코드로 사용자 조회
+    const user = await prisma.user.findUnique({
+      where: { friendCode },
+      select: { nickname: true }, // 닉네임만 조회
+    });
+
+    // 친구코드가 유효하지 않은 경우
+    if (!user) {
+      return res.status(404).json({ message: '유효하지 않은 친구코드입니다.' });
+    }
+
+    // 닉네임 반환
+    res.status(200).json({
+      message: '친구코드 확인 성공',
+      nickname: user.nickname,
+    });
+  } catch (err) {
+    console.error('친구 코드 확인 오류:', err.message);
+    res.status(500).json({ message: '친구코드를 확인하는 중 오류가 발생했습니다.' });
+  }
+};
+
+
 // 사용자 친구 추가
 export const addFriend = async (req, res) => {
   const { friendCode } = req.body;
