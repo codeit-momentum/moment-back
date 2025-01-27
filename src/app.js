@@ -9,7 +9,7 @@ import friendRoutes from './routes/friendRoutes.js';
 import homeRoutes from "./routes/homeRoutes.js";
 import momentRoutes from "./routes/momentRoutes.js";
 import userRoutes from './routes/userRoutes.js';
-
+import feedRoutes from './routes/feedRoutes.js';
 
 dotenv.config({override: true});
 
@@ -33,6 +33,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/home', homeRoutes);
 app.use('/api/bucket', momentRoutes);
+app.use('/api/feed', feedRoutes);
 
 console.log('Current Environment:', process.env.NODE_ENV);
 console.log('Redirect URI LOCAL:', process.env.REDIRECT_URI_LOCAL);
