@@ -21,6 +21,13 @@ export const getHome = async (req, res) => {
           error: { code: 404, message: '현재 사용자를 찾을 수 없습니다.' }
         });
       };
+
+      if (!date) {
+        return res.status(400).json({
+          success: false,
+          error: { code: 400, message: "날짜(date)는 필수 입력값입니다." }
+        });
+      }
       
       // 사용자의 moments 조회 
       const moments = await prisma.moment.findMany({
