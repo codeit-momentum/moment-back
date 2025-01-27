@@ -263,7 +263,7 @@ export const getBucketDetail = async (req, res) => {
             const completedMomentsCount = bucket.moments.filter((moment) => moment.isCompleted === true).length;
 
             
-            if (completedMomentsCount === momentsCount && !bucket.isCompleted) {
+            if (completedMomentsCount === momentsCount && !bucket.isCompleted && momentsCount !== 0) {
                 await tx.bucket.update({
                     where: { bucketID },
                     data: { isCompleted: true, updatedAt: new Date() },
