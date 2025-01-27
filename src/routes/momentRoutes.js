@@ -22,8 +22,8 @@ router.patch('/:bucketID', updateBucket); // 버킷 이름 수정
 
 
 //모멘트 등록 조회(bucketID)
-router.post('/moments/:bucketID/moments', createMoments);
-router.get('/moments/:bucketID/moments', getMomentsByBucket); // (반복형) 버킷리스트의 모멘트들 조회
+router.post('/moments/:bucketID', createMoments);
+router.get('/moments/:bucketID', getMomentsByBucket); // (반복형) 버킷리스트의 모멘트들 조회
 router.get('/moments/:momentID', getDetailMoment); // 선택한 모멘트의 상세 조회
 router.patch('/moments/:momentID', upload.single('photoUrl'), updateMoment); //모멘트 달성
 
