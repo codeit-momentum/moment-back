@@ -1,0 +1,51 @@
+GET http://localhost:3000/api/home
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2Nzk0ZGI0NjhlMmUxNDk4NDNhNmQ0ZDkiLCJlbWFpbCI6ImJpbGx5MTA5NTdAZ21haWwuY29tIiwiaWF0IjoxNzM3ODA4NzEwLCJleHAiOjE3Mzc4MTIzMTB9.9c8UgPdmELzmdqnsKfmZSIktXc2c-L94PK527XI3PKo
+
+###
+GET http://localhost:3000/api/moment
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2Nzk0ZGI0NjhlMmUxNDk4NDNhNmQ0ZDkiLCJlbWFpbCI6ImJpbGx5MTA5NTdAZ21haWwuY29tIiwiaWF0IjoxNzM3ODA4NzEwLCJleHAiOjE3Mzc4MTIzMTB9.9c8UgPdmELzmdqnsKfmZSIktXc2c-L94PK527XI3PKo
+
+###
+POST https://kauth.kakao.com/oauth/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&
+client_id=7c2e8690981a28b382cb26cc126dd6d0&
+redirect_uri=http://localhost:5173/auth/kakao/callback&
+code=dAoWuBVYZUt-69msDxt5NfioVlvwvv3b1SB3H9ocE6n3F8GpZN4D2QAAAAQKKwymAAABlJEduVYicpf3YNJZ6g
+
+
+### 1. 인가코드 발급
+POST http://localhost:3000/auth/kakao
+Origin: http://localhost:3000
+
+### 2. 인가코드 발급
+POST http://localhost:3000/auth/kakao-login
+Content-Type: application/json
+Origin: http://localhost:3000
+
+{
+    "code": "flxZpRg7w9cPMYNPNbr5PE2cettS4TcaODmzL7gb4V7va6nglfMjagAAAAQKKiVRAAABlJ13CM3Nsk3jZ7dWzg"
+}
+
+### 3: 카카오 액세스 토큰 발급 받기
+POST http://localhost:3000/auth/kakao-login/user
+Content-Type: application/json
+
+{
+    "kakaoAccessToken" : "xWnNFa4PZQxpU-syn2GM-e2CTHg2pxvUAAAAAQoqJU8AAAGUnXdyKxKZRqbpl2cW"
+}
+
+###
+
+GET https://kapi.kakao.com/v2/user/me
+Authorization: Bearer EmdUjO2lOiW85KIWwGSX2n3DBg7goQmuAAAAAQo8I-gAAAGUnWVlURKZRqbpl2cW
+###
+continueURL
+
+###
+https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=7c2e8690981a28b382cb26cc126dd6d0&redirect_uri=http://localhost:3000/auth/kakao/callback
+
+###
+GET https://kapi.kakao.com/v1/user/access_token_info
+Authorization: Bearer EmdUjO2lOiW85KIWwGSX2n3DBg7goQmuAAAAAQo8I-gAAAGUnWVlURKZRqbpl2cW
