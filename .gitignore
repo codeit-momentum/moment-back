@@ -5,3 +5,4 @@ https/
 .env.development
 .env.production
 seed.js
+prisma.js

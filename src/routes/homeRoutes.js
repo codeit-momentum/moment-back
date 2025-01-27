@@ -1,6 +1,7 @@
 import express from 'express';
-import { getCompletedMomentsByDay, getHome, getNotifications, markNotificationAsRead } from '../controllers/homeControllers.js';
+import { getCompletedMomentsByDay, getHome } from '../controllers/homeControllers.js';
 import { jwtMiddleware } from '../middlewares/jwtMiddlewares.js';
+import { getAndMarkNotificationsAsRead } from '../controllers/notificationController.js';
 // import { prismaMiddleware } from '../middlewares/prismaMiddlewares.js';
 
 const router = express.Router();
@@ -11,10 +12,8 @@ router.use(jwtMiddleware);
 // router.use(prismaMiddleware);
 
 router.get('', getHome); // 홈 목록 조회
-router.get('/notifications', getNotifications); // 알림 목록 조회 및 새 알림 표시
-router.patch('/notifications/:notificationID', markNotificationAsRead); // 알림 읽음 수정 
+router.patch('/notifications', getAndMarkNotificationsAsRead); // 알림 조회 및 읽음 처리  
 // router.get('/momentsComplete/week', getCompletedMomentsByWeek); // 요일별 인증 확인 
 router.get('/momentsComplete/day', getCompletedMomentsByDay); // 당일 인증 확인 
-
 
 export default router;
