@@ -5,7 +5,7 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "windows", "debian-openssl-3.0.x"]
 }
 
@@ -24,14 +24,13 @@ model User {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @default(now())
 
-  Friends          Friend[]        @relation("UserFriend") // 사용자가 추가한 친구 목록
-  FriendUsers      Friend[]        @relation("FriendUser") // 사용자를 친구로 추가한 사용자 목록
-  feeds            Feed[]          @relation("UserFeeds")
-  FriendFeeds      FriendFeed[]    @relation("FriendUserFeeds")
+  Friends       Friend[]       @relation("UserFriend") // 사용자가 추가한 친구 목록
+  FriendUsers   Friend[]       @relation("FriendUser") // 사용자를 친구로 추가한 사용자 목록
+  feeds         Feed[]         @relation("UserFeeds")
+  FriendFeeds   FriendFeed[]   @relation("FriendUserFeeds")
   moments       Moment[]       @relation("UserMoments") // 사용자가 추가한 모멘트 목록 
   notifications Notification[] @relation("UserNotifications") // 사용자 알람 목록 
   bucket        Bucket[]       @relation("UserBuckets") // 사용자 추가한 버킷리스트 
-  
 }
 
 model Friend {
@@ -40,88 +39,90 @@ model Friend {
   friendUserID String // 친구(userID) 참조
   isFixed      Boolean   @default(false) // 친구 목록에서 고정 여부
   isKnock      Boolean   @default(false)
-  fixedAt      DateTime? 
-  knockedAt    DateTime? 
+  fixedAt      DateTime?
+  knockedAt    DateTime?
   createdAt    DateTime  @default(now())
-  user         User      @relation("UserFriend", fields: [userID], references: [userID], onDelete: Cascade) // 친구 관계의 주체
-  friendUser   User      @relation("FriendUser", fields: [friendUserID], references: [userID], onDelete: Cascade) // 친구 관계의 대상
+  user         User      @relation("UserFriend", fields: [userID], references: [userID]) // 친구 관계의 주체
+  friendUser   User      @relation("FriendUser", fields: [friendUserID], references: [userID]) // 친구 관계의 대상
 
   @@unique([userID, friendUserID], name: "userID_friendUserID") // 동일한 사용자 간 중복 친구 관계 방지
 }
 
 model Feed {
   feedID    String   @id @default(auto()) @map("_id") @db.ObjectId
-  userID    String   // 사용자 ID 참조
+  userID    String // 사용자 ID 참조
   content   String
   createdAt DateTime @default(now())
-  user      User     @relation("UserFeeds", fields: [userID], references: [userID], onDelete: Cascade)
+  user      User     @relation("UserFeeds", fields: [userID], references: [userID])
 }
 
 model FriendFeed {
   friendFeedId String   @id @default(auto()) @map("_id") @db.ObjectId
-  userID       String   // 피드를 보는 사용자 ID
+  userID       String // 피드를 보는 사용자 ID
   feedID       String   @db.ObjectId // 친구의 피드 ID
   cheer        Boolean  @default(false)
   createdAt    DateTime @default(now()) // 연결이 생성된 시각
 
-  user         User     @relation("FriendUserFeeds", fields: [userID], references: [userID], onDelete: Cascade)
+  user User @relation("FriendUserFeeds", fields: [userID], references: [userID], onDelete: Cascade)
 
   @@unique([userID, feedID], name: "userID_feedID")
 }
 
 model Moment {
-  momentID      String   @id @default(auto()) @map("_id") @db.ObjectId
-  content       String
-  isCompleted   Boolean  @default(false)
-  photoUrl      String?  @default("")// 인증사진
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  momentID    String   @id @default(auto()) @map("_id") @db.ObjectId
+  content     String
+  isCompleted Boolean  @default(false)
+  photoUrl    String? // 인증사진
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // 어떤 버킷에 속하는지
-  bucketID      String   @db.ObjectId
-  bucket        Bucket   @relation("BucketMoments", fields: [bucketID], references: [bucketID], onDelete: Cascade)
-  startDate     DateTime?   @default(now())
-  endDate       DateTime?   @default("2025-12-31T00:00:00.000Z")
-  
-  userID        String
-  user          User     @relation("UserMoments", fields: [userID], references: [userID], onDelete: Cascade)
+  bucketID String @db.ObjectId
+  bucket   Bucket @relation("BucketMoments", fields: [bucketID], references: [bucketID], onDelete: Cascade)
+
+  userID String
+  user   User   @relation("UserMoments", fields: [userID], references: [userID], onDelete: Cascade)
 }
 
 model Notification {
   notificationID String           @id @default(auto()) @map("_id") @db.ObjectId
-  type           NotificationType @default(GENERAL)
+  type           NotificationType
   content        String
-  createdAt      DateTime
+  createdAt      DateTime         @default(now())
   isRead         Boolean          @default(false)
   userID         String
-  user           User             @relation("UserNotifications", fields: [userID], references: [userID], onDelete: Cascade)
+  user           User             @relation("UserNotifications", fields: [userID], references: [userID])
 }
 
 enum NotificationType {
-  GENERAL // 기본값 
+  FRIEND // 기본값 
+  KNOCK // 노크하기 
+  CHEER // 응원하기 
 }
 
 model Bucket {
-  bucketID      String     @id @default(auto()) @map("_id") @db.ObjectId
-  type          BucketType
-  content       String
+  bucketID String     @id @default(auto()) @map("_id") @db.ObjectId
+  type     BucketType
+  content  String
 
-  photoUrl      String?     @default("") // 인증사진 경로 (S3 업로드)
-  isCompleted   Boolean?    @default(false) // 달성형이 완료됐는지
+  photoUrl    String? // 인증사진 경로 (S3 업로드)
+  isCompleted Boolean? @default(false) // 달성형이 완료됐는지
 
-  isChallenging Boolean     @default(false)
-  startDate     DateTime? 
-  endDate       DateTime?  
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime?   @updatedAt
+  isChallenging         Boolean   @default(false)
+  momentsCount          Int       @default(0)
+  completedMomentsCount Int       @default(0)
+  startDate             DateTime?
+  endDate               DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime? @updatedAt
 
-  userID        String
-  user          User       @relation("UserBuckets", fields: [userID], references: [userID], onDelete: Cascade)
+  userID String
+  user   User   @relation("UserBuckets", fields: [userID], references: [userID])
 
-  moments       Moment[]   @relation("BucketMoments")
+  moments Moment[] @relation("BucketMoments")
 }
 
 enum BucketType {
-  REPEAT       // 반복형
-  ACHIEVEMENT  // 달성형
+  REPEAT // 반복형
+  ACHIEVEMENT // 달성형
 }

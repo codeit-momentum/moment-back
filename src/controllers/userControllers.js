@@ -1,6 +1,6 @@
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { PrismaClient } from '@prisma/client';
 import { s3Client } from '../config/s3config.js';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
 
 const prisma = new PrismaClient();
 
@@ -38,7 +38,7 @@ export const getUserFriendCode = async (req, res) => {
     if (!currentUser) { // 현재 사용자가 없는 경우
       return res.status(404).json({ message: '현재 사용자를 찾을 수 없습니다.' });
     }
-
+    
     // 사용자 정보 반환
     res.status(200).json({
       message: '사용자의 친구 코드 접근 성공',

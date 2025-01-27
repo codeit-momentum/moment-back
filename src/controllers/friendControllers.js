@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import moment from 'moment';
 import cron from 'node-cron';
+
 const prisma = new PrismaClient();
 
 
@@ -50,6 +51,40 @@ export const getFriends = async (req, res) => {
     res.status(500).json({ message: '친구 목록 조회 중 오류가 발생했습니다.' });
   }
 };
+
+
+// 친구추가 전 친구 닉네임 GET
+export const checkFriendCode = async (req, res) => {
+  const { friendCode } = req.body; // 클라이언트로부터 받은 친구 코드
+
+  // 친구코드가 없는 경우 에러 반환
+  if (!friendCode) {
+    return res.status(400).json({ message: '친구코드가 필요합니다.' });
+  }
+
+  try {
+    // 친구코드로 사용자 조회
+    const user = await prisma.user.findUnique({
+      where: { friendCode },
+      select: { nickname: true }, // 닉네임만 조회
+    });
+
+    // 친구코드가 유효하지 않은 경우
+    if (!user) {
+      return res.status(404).json({ message: '유효하지 않은 친구코드입니다.' });
+    }
+
+    // 닉네임 반환
+    res.status(200).json({
+      message: '친구코드 확인 성공',
+      nickname: user.nickname,
+    });
+  } catch (err) {
+    console.error('친구 코드 확인 오류:', err.message);
+    res.status(500).json({ message: '친구코드를 확인하는 중 오류가 발생했습니다.' });
+  }
+};
+
 
 // 사용자 친구 추가
 export const addFriend = async (req, res) => {
@@ -106,6 +141,33 @@ export const addFriend = async (req, res) => {
         },
       ],
     });
+    
+    // 친구 요청한 유저 
+    const user = await prisma.user.findUnique({
+      where: { userID : requesterID }
+    });
+
+    // 친구 요청 받은 유저 
+    const friend = await prisma.user.findUnique({
+      where: { userID : receiverID }
+    });
+
+    
+    // 친구 생성 알림 추가 
+    await prisma.notification.createMany({
+      data: [
+        {
+          userID: requesterID,
+          type: 'FRIEND',
+          content: `${friend.nickname}님과 친구가 되었어요!`,
+        },
+        {
+          userID: receiverID,
+          type: 'FRIEND',
+          content: `${user.nickname}님과 친구가 되었어요!`,
+        },
+      ]
+    });
 
     res.status(201).json({
       message: '친구 추가 성공',
@@ -118,7 +180,7 @@ export const addFriend = async (req, res) => {
     });
   } catch (err) {
     console.error('친구 추가 오류:', err.message);
-    res.status(500).json({ message: '친구 추가가 중 오류가 발생했습니다.' });
+    res.status(500).json({ message: '친구 추가 중 오류가 발생했습니다.' });
   }
 };
 
@@ -219,6 +281,20 @@ export const knockFriend = async (req, res) => {
         isKnock: true
       }
     });
+    
+    // 노크한 유저 
+    const user = await prisma.user.findUnique({
+      where: { userID }
+    });
+
+    // 친구 노크 알림 추가 
+    await prisma.notification.create({
+      data: {
+        userID: friendUserID,
+        type: 'KNOCK',
+        content: `${user.nickname}님이 말해요, 피드가 조용해서 심심하대요!`,
+      }
+    });
 
     res.status(200).json({ status: "success", message: "노크 알림이 전송되었습니다." });
   } catch (err) {
@@ -252,6 +328,29 @@ export const cheerOnFriendFeed = async (req, res) => {
         userID: userID,
         feedID: feedID,
         cheer: true
+      }
+    });
+    
+    // 응원한 유저 
+    const user = await prisma.user.findUnique({
+      where: { userID }
+    });
+    
+    const feed = await prisma.feed.findUnique({
+      where: { feedID }
+    });
+
+    // 응원받은 유저 
+    const friend = await prisma.user.findUnique({
+      where: { userID : feed.userID}
+    });
+
+    // 친구 피드 응원 알림 추가 
+    await prisma.notification.create({
+      data: {
+        userID: friend.userID,
+        type: 'CHEER',
+        content: `${user.nickname}님이 ${friend.nickname}님의 "${feed.content}" 달성을 응원한대요!`,
       }
     });
 
