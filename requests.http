@@ -1,9 +1,14 @@
-GET http://localhost:3000/api/home
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2Nzk0ZGI0NjhlMmUxNDk4NDNhNmQ0ZDkiLCJlbWFpbCI6ImJpbGx5MTA5NTdAZ21haWwuY29tIiwiaWF0IjoxNzM3ODA4NzEwLCJleHAiOjE3Mzc4MTIzMTB9.9c8UgPdmELzmdqnsKfmZSIktXc2c-L94PK527XI3PKo
+GET http://localhost:3000/api/feed/3875241780
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2Nzk0ZGI0NjhlMmUxNDk4NDNhNmQ0ZDkiLCJlbWFpbCI6ImJpbGx5MTA5NTdAZ21haWwuY29tIiwiaWF0IjoxNzM3OTUxNTU0LCJleHAiOjE3Mzc5NTUxNTR9.IZ5QEz3ilt_cxChMMP5l_PYWaIuI0YdHvpycGDWvzQQ
+### 내 정보 조회
+GET http://localhost:3000/api/users
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2Nzk0ZGI0NjhlMmUxNDk4NDNhNmQ0ZDkiLCJlbWFpbCI6ImJpbGx5MTA5NTdAZ21haWwuY29tIiwiaWF0IjoxNzM3OTUxNTU0LCJleHAiOjE3Mzc5NTUxNTR9.IZ5QEz3ilt_cxChMMP5l_PYWaIuI0YdHvpycGDWvzQQ
 
 ###
-GET http://localhost:3000/api/moment
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2Nzk0ZGI0NjhlMmUxNDk4NDNhNmQ0ZDkiLCJlbWFpbCI6ImJpbGx5MTA5NTdAZ21haWwuY29tIiwiaWF0IjoxNzM3ODA4NzEwLCJleHAiOjE3Mzc4MTIzMTB9.9c8UgPdmELzmdqnsKfmZSIktXc2c-L94PK527XI3PKo
+GET http://localhost:3000/api/bucket
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2Nzk0ZGI0NjhlMmUxNDk4NDNhNmQ0ZDkiLCJlbWFpbCI6ImJpbGx5MTA5NTdAZ21haWwuY29tIiwiaWF0IjoxNzM3OTUxNTU0LCJleHAiOjE3Mzc5NTUxNTR9.IZ5QEz3ilt_cxChMMP5l_PYWaIuI0YdHvpycGDWvzQQ
 
 ###
 POST https://kauth.kakao.com/oauth/token
@@ -16,36 +21,43 @@ code=dAoWuBVYZUt-69msDxt5NfioVlvwvv3b1SB3H9ocE6n3F8GpZN4D2QAAAAQKKwymAAABlJEduVY
 
 
 ### 1. 인가코드 발급
-POST http://localhost:3000/auth/kakao
-Origin: http://localhost:3000
-
-### 2. 인가코드 발급
 POST http://localhost:3000/auth/kakao-login
 Content-Type: application/json
 Origin: http://localhost:3000
 
 {
-    "code": "flxZpRg7w9cPMYNPNbr5PE2cettS4TcaODmzL7gb4V7va6nglfMjagAAAAQKKiVRAAABlJ13CM3Nsk3jZ7dWzg"
+    "code": "RdocQMs16kokZ4epm4tBFES-FhDvLZ2UO48IISxHaX-MG3yFlb0UxwAAAAQKPXObAAABlKX7yHESmUam6ZdnFg"
 }
 
-### 3: 카카오 액세스 토큰 발급 받기
+### 2: 카카오 액세스 토큰 발급 받기
 POST http://localhost:3000/auth/kakao-login/user
 Content-Type: application/json
 
 {
-    "kakaoAccessToken" : "xWnNFa4PZQxpU-syn2GM-e2CTHg2pxvUAAAAAQoqJU8AAAGUnXdyKxKZRqbpl2cW"
+    "kakaoAccessToken" : "iX7FARcNP_HIZQOx6Q_ttHpsdqzKdt3IAAAAAQoqJZAAAAGUpfwBtBKZRqbpl2cW"
 }
-
-###
-
-GET https://kapi.kakao.com/v2/user/me
-Authorization: Bearer EmdUjO2lOiW85KIWwGSX2n3DBg7goQmuAAAAAQo8I-gAAAGUnWVlURKZRqbpl2cW
-###
-continueURL
 
 ###
 https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=7c2e8690981a28b382cb26cc126dd6d0&redirect_uri=http://localhost:3000/auth/kakao/callback
 
 ###
 GET https://kapi.kakao.com/v1/user/access_token_info
-Authorization: Bearer EmdUjO2lOiW85KIWwGSX2n3DBg7goQmuAAAAAQo8I-gAAAGUnWVlURKZRqbpl2cW
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2Nzk0ZGI0NjhlMmUxNDk4NDNhNmQ0ZDkiLCJlbWFpbCI6ImJpbGx5MTA5NTdAZ21haWwuY29tIiwiaWF0IjoxNzM3OTUxNTU0LCJleHAiOjE3Mzc5NTUxNTR9.IZ5QEz3ilt_cxChMMP5l_PYWaIuI0YdHvpycGDWvzQQ
+
+###
+GET http://localhost:3000/api/bucket/679464fe333374b31e2f204b
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2Nzk0ZGI0NjhlMmUxNDk4NDNhNmQ0ZDkiLCJlbWFpbCI6ImJpbGx5MTA5NTdAZ21haWwuY29tIiwiaWF0IjoxNzM3OTUxNTU0LCJleHAiOjE3Mzc5NTUxNTR9.IZ5QEz3ilt_cxChMMP5l_PYWaIuI0YdHvpycGDWvzQQ
+Content-Type: application/json
+
+// 버킷리스트 생성
+###
+POST http://localhost:3000/api/bucket
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2Nzk0ZGI0NjhlMmUxNDk4NDNhNmQ0ZDkiLCJlbWFpbCI6ImJpbGx5MTA5NTdAZ21haWwuY29tIiwiaWF0IjoxNzM3OTUxNTU0LCJleHAiOjE3Mzc5NTUxNTR9.IZ5QEz3ilt_cxChMMP5l_PYWaIuI0YdHvpycGDWvzQQ
+Content-Type: application/json
+
+{
+    "type": "REPEAT",
+    "category": "HOBBY",
+    "content": "테스트 REPEAT 버킷리스트"
+}
+
