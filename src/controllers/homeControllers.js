@@ -82,11 +82,11 @@ export const getHome = async (req, res) => {
 export const getCompletedMomentsByWeek = async (req, res) => {
   try {
     const userID = req.user.userID; // 인증된 사용자 ID
-    const { date } = req.body;
+    const dateString = req.body.date;
 
     // 현재 사용자 조회
     const currentUser = await prisma.user.findUnique({
-      where: { userID: req.user.userID },
+      where: { userID },
     });
 
     if (!currentUser) { 
@@ -96,19 +96,28 @@ export const getCompletedMomentsByWeek = async (req, res) => {
       });
     };
 
-    if (!date) {
+    if (!dateString) {
       return res.status(400).json({
         success: false,
         error: { code: 400, message: "날짜(date)는 필수 입력값입니다." }
       });
     }
+    
+    const date = new Date(dateString); // 문자열 날짜 => Date 객체
+    if (isNaN(date.getTime())) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 400, message: "유효하지 않은 날짜 형식입니다." },
+      });
+    }
 
     // 해당 날짜가 포함된 주의 시작(월요일)과 끝(일요일) 계산
-    const startDate = startOfWeek(parseISO(date), { weekStartsOn: 2 }); // 월요일 기준 시작
-    const endDate = endOfWeek(parseISO(date), { weekStartsOn: 2 }); // 일요일 기준 끝
+    const startDate = startOfWeek(date, { weekStartsOn: 2 }); // 월요일 기준 시작
+    const endDate = endOfWeek(date, { weekStartsOn: 2 }); // 일요일 기준 끝
 
     // 월요일부터 일요일까지의 모든 날짜 배열 생성
     const weekDates = eachDayOfInterval({ start: startDate, end: endDate });
+
 
     // 해당 주의 모든 moment 가져오기 (startDate와 endDate 범위로 필터링)
     const moments = await prisma.moment.findMany({
