@@ -8,7 +8,7 @@ export const getHome = async (req, res) => {
     try {
       // 현재 인증된 사용자 정보 가져오기
       const userID = req.user.userID; // 현재 사용자 ID
-      const dateString = req.body.date;
+      const { date } = req.body;
 
       // 현재 사용자 조회
       const currentUser = await prisma.user.findUnique({
@@ -22,18 +22,10 @@ export const getHome = async (req, res) => {
         });
       };
 
-      if (!dateString) {
+      if (!date) {
         return res.status(400).json({
           success: false,
           error: { code: 400, message: "날짜(date)는 필수 입력값입니다." }
-        });
-      }
-      
-      const date = new Date(dateString); // 문자열 날짜 => Date 객체
-      if (isNaN(date.getTime())) {
-        return res.status(400).json({
-          success: false,
-          error: { code: 400, message: "유효하지 않은 날짜 형식입니다." },
         });
       }
 
@@ -86,7 +78,7 @@ export const getCompletedMomentsByWeek = async (req, res) => {
 
     // 현재 사용자 조회
     const currentUser = await prisma.user.findUnique({
-      where: { userID: req.user.userID },
+      where: { userID },
     });
 
     if (!currentUser) { 
