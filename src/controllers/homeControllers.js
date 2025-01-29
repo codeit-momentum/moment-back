@@ -143,7 +143,7 @@ export const getCompletedMomentsByWeek = async (req, res) => {
 
       // 모든 moment가 완료 상태인지 확인 (하나라도 false면 false 처리)
       const isComplete =
-        momentsForDate.length > 0 && momentsForDate.every(m => m.isCompleted);
+        momentsForDate.length > 0 && momentsForDate.some(m => m.isCompleted);
 
       return {
         date: day.toISOString().split("T")[0], // 날짜를 YYYY-MM-DD 형식으로 반환
@@ -161,6 +161,80 @@ export const getCompletedMomentsByWeek = async (req, res) => {
 
   } catch (err) {
     console.error("주간 완료 데이터 조회 실패:", err.message);
+    return res.status(500).json({
+      success: false,
+      error: { code: 500, message: "서버 내부 오류가 발생했습니다." }
+    });
+  }
+};
+
+// 연속적으로 인증한 날짜 조회
+export const getConsecutiveCompletedDays = async (req, res) => {
+  try {
+    const userID = req.user.userID; // 인증된 사용자 ID
+    const dateString = req.body.date;
+
+    // 현재 사용자 조회
+    const currentUser = await prisma.user.findUnique({
+      where: { userID }
+    });
+
+    if (!currentUser) {
+      return res.status(404).json({
+        success: false,
+        error: { code: 404, message: '현재 사용자를 찾을 수 없습니다.' }
+      });
+    }
+
+    if (!dateString) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 400, message: "날짜(date)는 필수 입력값입니다." }
+      });
+    }
+    
+    const targetDate = new Date(dateString);
+    if (isNaN(targetDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 400, message: "유효하지 않은 날짜 형식입니다." },
+      });
+    }
+
+    // 연속된 isCompleted === true인 날짜 개수를 계산
+    let consecutiveDays = 1;
+    let checkDate = new Date(targetDate);
+    checkDate.setDate(checkDate.getDate() - 1); // 하루 전부터 검사 시작
+
+    while (true) {
+      const moments = await prisma.moment.findMany({
+        where: {
+          userID: userID,
+          startDate: { lte: checkDate },
+          endDate: { gte: checkDate }
+        },
+        select: {
+          isCompleted: true,
+        }
+      });
+
+      const isComplete = moments.length > 0 && moments.some(m => m.isCompleted);
+
+      if (isComplete) {
+        consecutiveDays++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "연속 완료된 날짜 개수를 성공적으로 조회하였습니다.",
+      consecutiveDays: consecutiveDays
+    });
+  } catch (err) {
+    console.error("연속 완료 날짜 조회 실패:", err.message);
     return res.status(500).json({
       success: false,
       error: { code: 500, message: "서버 내부 오류가 발생했습니다." }
