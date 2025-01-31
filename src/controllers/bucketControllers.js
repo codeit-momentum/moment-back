@@ -368,3 +368,66 @@ export const getCompletedBuckets = async (req, res) => {
         });
     }
 };
+
+export const getAllUserBuckets = async (req, res) => {
+    try {
+      // JWT 인증 후, authMiddleware에서 세팅된 유저 정보
+        const userID = req.user.userID;
+    
+        // 1) userID로 버킷들 조회 (findMany)
+        //    Bucket -> User(userID, nickname) 관계를 select
+        const buckets = await prisma.bucket.findMany({
+            where: { userID },
+            select: {
+            bucketID: true,
+            content: true,
+            isCompleted: true,
+            user: {
+                select: {
+                userID: true,
+                nickname: true,
+                },
+            },
+            },
+            orderBy: { /* 필요하면 정렬, 예: createdAt: 'desc' */ },
+        });
+    
+        // 유저가 버킷을 하나도 안 갖고 있을 때
+        if (!buckets || buckets.length === 0) {
+            return res.status(200).json({
+            success: true,
+            message: '해당 유저는 버킷이 없습니다.',
+            userID: userID,
+            nickname: '',      // 유저 정보를 아래처럼 별도 조회할 수도 있음
+            buckets: [],
+            });
+        }
+    
+        // 2) 첫 번째 버킷에서 user 정보 추출 (모두 동일 유저이므로)
+        const { user } = buckets[0]; 
+        // user.userID, user.nickname
+    
+        // 3) 응답 데이터 구성
+        //    bucketID, content, isCompleted => buckets 배열
+        const responseData = {
+            userID: user.userID,
+            nickname: user.nickname,
+            buckets: buckets.map(b => ({
+            bucketID: b.bucketID,
+            content: b.content,
+            isCompleted: b.isCompleted,
+            })),
+        };
+    
+        return res.status(200).json({
+            success: true,
+            ...responseData,
+        });
+        } catch (error) {
+        console.error('유저 버킷리스트 조회 실패:', error);
+        return res.status(500).json({
+            success: false,
+            error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
+        });
+    }
+};
