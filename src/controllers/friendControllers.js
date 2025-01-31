@@ -189,6 +189,10 @@ export const deleteFriend = async (req, res) => {
   const userID = req.user.userID; // 현재 사용자 ID
   const { friendUserID } = req.body; // 삭제할 친구의 사용자 ID
 
+  if (!friendUserID) {
+    return res.status(400).json({ message: '삭제할 친구의 사용자 ID가 필요합니다.' });
+  }
+  
   try {
     // 친구 관계 확인
     const friendRelation = await prisma.friend.findMany({
