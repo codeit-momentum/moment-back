@@ -441,3 +441,54 @@ export const getAchievementBuckets = async (req, res) => {
         });
     }
 };
+
+
+export const deleteBucket = async (req, res) => {
+    try {
+      const userID = req.user.userID; // JWT 인증 후 주입된 값
+        const { bucketID } = req.params;
+    
+        // 1) 버킷 존재 여부 확인
+        const existingBucket = await prisma.bucket.findUnique({
+            where: { bucketID },
+        });
+        if (!existingBucket) {
+            return res.status(404).json({
+            success: false,
+            error: { code: 404, message: '해당 버킷을 찾을 수 없습니다.' },
+            });
+        }
+    
+        // 2) 소유자 체크
+        if (existingBucket.userID !== userID) {
+            return res.status(403).json({
+            success: false,
+            error: { code: 403, message: '버킷 삭제 권한이 없습니다.' },
+            });
+        }
+    
+        // 3) 연쇄 삭제 (모멘트 → 버킷)
+        await prisma.$transaction(async (tx) => {
+            // 3-1) 버킷에 속한 모멘트들 전부 삭제
+            await tx.moment.deleteMany({
+                where: { bucketID },
+            });
+    
+            // 3-2) 버킷 삭제
+            await tx.bucket.delete({
+                where: { bucketID },
+            });
+        });
+        return res.status(200).json({
+            success: true,
+            message: '버킷리스트가 성공적으로 삭제되었습니다.',
+            bucketID,
+        });
+        } catch (error) {
+        console.error('버킷 삭제 실패:', error);
+        return res.status(500).json({
+            success: false,
+            error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
+        });
+    }
+};
