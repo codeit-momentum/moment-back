@@ -297,3 +297,70 @@ export const getDetailMoment = async (req, res) => {
         });
     }
 }
+
+
+export const getChallengingBucketsAndMoments = async (req, res) => {
+    try {
+        const userID = req.user.userID;
+        const now = new Date(); // 현재 시각
+    
+        // 1) 도전 중인(isChallenging=true) 버킷들 조회
+        //    해당 유저의 버킷만
+        const buckets = await prisma.bucket.findMany({
+            where: {
+                userID,
+                isChallenging: true,
+            },
+            include: {
+                moments: true, // 모멘트 전부 가져옴, 추후 필터링
+            },
+        });
+    
+        // 2) 응답용 데이터 가공
+        const responseData = buckets.map((bucket) => {
+            // (a) 실시간 계산
+            const allMoments = bucket.moments;
+            const momentCount = allMoments.length;
+            const completedMomentsCount = allMoments.filter((m) => m.isCompleted).length;
+    
+            // (b) 현재시간(now)이 startDate ≤ now ≤ endDate 인 모멘트만 필터
+            const inRangeMoments = allMoments.filter((m) => {
+            // startDate, endDate 가 null인 경우 처리 (기획에 따라)
+                if (!m.startDate || !m.endDate) return false;
+    
+                const start = new Date(m.startDate);
+                const end = new Date(m.endDate);
+        
+                return start <= now && now <= end;
+            });
+    
+            // (c) 응답용 모멘트 필드만 추출
+            const filteredMoments = inRangeMoments.map((m) => ({
+                photoUrl: m.photoUrl || '',
+                content: m.content,
+                momentID: m.momentID,
+                bucketID: bucket.bucketID, // or m.bucketID, same
+            }));
+    
+            return {
+                bucketID: bucket.bucketID,
+                content: bucket.content,
+                momentCount,
+                completedMomentsCount,
+                moments: filteredMoments,
+            };
+        });
+    
+        return res.status(200).json({
+            success: true,
+            count: responseData.length,
+            data: responseData,
+        });
+        } catch (error) {
+        console.error('도전 중 버킷 및 모멘트 조회 실패:', error);
+        return res.status(500).json({
+            success: false,
+            error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
+        });
+    }
+};
