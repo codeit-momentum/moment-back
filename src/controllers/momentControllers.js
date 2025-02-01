@@ -237,7 +237,7 @@ export const updateMoment = async (req, res) => {
             if (totalMoments > 0 && totalMoments === completedMoments) {
                 updatedBucket = await tx.bucket.update({
                     where: { bucketID },
-                    data: { isCompleted: true, updatedAt: new Date() },
+                    data: { isCompleted: true, isChallenging: false, updatedAt: new Date() },
                 });
             }
 
