@@ -313,6 +313,33 @@ export const cheerOnFriendFeed = async (req, res) => {
   const feedID = req.params.feedId; // URL 파라미터로 받은 피드 ID
 
   try {
+    const feed = await prisma.feed.findUnique({
+      where: { feedID }
+    });
+
+    if (!feed) {
+      return res.status(404).json({ message: "해당 피드를 찾을 수 없습니다." });
+    }
+
+    // 2) 응원한 유저 정보 조회
+    const user = await prisma.user.findUnique({
+      where: { userID }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "사용자를 찾을 수 없습니다." });
+    }
+
+    // 3) 응원받을 유저(= 해당 피드를 작성한 친구)
+    const friend = await prisma.user.findUnique({
+      where: { userID: feed.userID }
+    });
+
+    if (!friend) {
+      return res.status(404).json({ message: "친구를 찾을 수 없습니다." });
+    }
+
+
     // 이미 해당 피드에 대해 응원했는지 확인
     const existingCheer = await prisma.friendFeed.findFirst({
       where: {
@@ -333,20 +360,6 @@ export const cheerOnFriendFeed = async (req, res) => {
         feedID: feedID,
         cheer: true
       }
-    });
-    
-    // 응원한 유저 
-    const user = await prisma.user.findUnique({
-      where: { userID }
-    });
-    
-    const feed = await prisma.feed.findUnique({
-      where: { feedID }
-    });
-
-    // 응원받은 유저 
-    const friend = await prisma.user.findUnique({
-      where: { userID : feed.userID}
     });
 
     // 친구 피드 응원 알림 추가 
