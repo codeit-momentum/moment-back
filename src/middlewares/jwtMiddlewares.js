@@ -69,7 +69,7 @@ export const jwtMiddleware = async (req, res, next) => {
 
         next(); // 다음 미들웨어로 전달
       } catch (refreshErr) {
-        return res.status(403).json({ message: '새로운 Access Token 발급 실패' });
+        return res.status(401).json({ message: '새로운 Access Token 발급 실패' });
       }
     } else {
       return res.status(401).json({ message: '유효하지 않은 Access Token입니다.' });
