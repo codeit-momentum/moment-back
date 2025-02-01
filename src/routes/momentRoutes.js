@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { activateBucketChallenge, createBucket, deactivateBucketChallenge, getAchievementBuckets, getBucketDetail, getCompletedBuckets, getRepeatBuckets, updateBucket, uploadAchievementPhoto } from '../controllers/bucketControllers.js';
+import { activateBucketChallenge, createBucket, deactivateBucketChallenge, deleteBucket, getAchievementBuckets, getBucketDetail, getCompletedBuckets, getRepeatBuckets, updateBucket, uploadAchievementPhoto } from '../controllers/bucketControllers.js';
 import { createMoments, getDetailMoment, getMomentsByBucket, updateMoment } from '../controllers/momentControllers.js';
 import { jwtMiddleware } from '../middlewares/jwtMiddlewares.js';
 
@@ -21,6 +21,7 @@ router.get('/:bucketID', getBucketDetail); // 버킷리스트 상세 조회
 router.patch('/:bucketID', updateBucket); // 버킷 이름 수정
 router.get('/all/repeat', getRepeatBuckets); // 반복형 버킷 목록 조회
 router.get('/all/achievement', getAchievementBuckets); // 달성형 버킷 목록 조회
+router.delete('/:bucketID', deleteBucket); // 버킷 삭제
 
 //모멘트 등록 조회(bucketID)
 router.post('/moments/:bucketID', createMoments);
