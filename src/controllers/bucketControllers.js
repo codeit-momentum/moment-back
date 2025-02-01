@@ -406,3 +406,38 @@ export const getRepeatBuckets = async (req, res) => {
         });
     }
 };
+
+export const getAchievementBuckets = async (req, res) => {
+    try {
+        const userID = req.user.userID;
+    
+        // 1) ACHIEVEMENT 타입 && 해당 userID의 버킷 조회
+        const buckets = await prisma.bucket.findMany({
+            where: {
+                userID,
+                type: 'ACHIEVEMENT',
+            },
+            select: {
+                bucketID: true,  
+                content: true,
+                isCompleted: true,
+            // isChallenging 필드는 달성형에 의미 없으므로 제외
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+    
+        return res.status(200).json({
+            success: true,
+            user: userID,
+            count: buckets.length,
+            type: 'ACHIEVEMENT 달성형',
+            buckets,
+        });
+        } catch (error) {
+        console.error('달성형 버킷 조회 실패:', error);
+        return res.status(500).json({
+            success: false,
+            error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
+        });
+    }
+};
