@@ -482,6 +482,7 @@ export const deleteBucket = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: '버킷리스트가 성공적으로 삭제되었습니다.',
+            type: existingBucket.type,
             bucketID,
         });
         } catch (error) {
