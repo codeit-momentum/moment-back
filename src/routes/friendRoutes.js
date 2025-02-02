@@ -12,9 +12,9 @@ router.use(jwtMiddleware);
 router.get('/', getFriends); // 친구 목록 조회
 router.post('/', addFriend); // 친구 추가
 router.post('/check-friendCode', checkFriendCode); // 친구 코드 확인
-router.delete('/', deleteFriend); // 친구 삭제제
+router.delete('/', deleteFriend); // 친구 삭제
 router.post('/knock', knockFriend); // 친구 노크하기
-router.post('/cheer/:feedId', cheerOnFriendFeed); // 친구 응원하기
-router.patch('/fixed', toggleFriendFix); // 친구 고정/고정 해제하기기
+router.post('/cheer/:friendId/:momentId', cheerOnFriendFeed); // 친구 응원하기
+router.patch('/fixed', toggleFriendFix); // 친구 고정/고정 해제하기
 
 export default router;
