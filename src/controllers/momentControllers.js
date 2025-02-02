@@ -339,6 +339,7 @@ export const getChallengingBucketsAndMoments = async (req, res) => {
                 photoUrl: m.photoUrl || '',
                 content: m.content,
                 momentID: m.momentID,
+                isCompleted: m.isCompleted,
                 bucketID: bucket.bucketID, // or m.bucketID, same
             }));
     
