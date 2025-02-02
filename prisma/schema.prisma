@@ -26,7 +26,7 @@ model User {
 
   Friends       Friend[]       @relation("UserFriend") // 사용자가 추가한 친구 목록
   FriendUsers   Friend[]       @relation("FriendUser") // 사용자를 친구로 추가한 사용자 목록
-  feeds         Feed[]         @relation("UserFeeds")
+  //feeds         Feed[]         @relation("UserFeeds")
   FriendFeeds   FriendFeed[]   @relation("FriendUserFeeds")
   moments       Moment[]       @relation("UserMoments") // 사용자가 추가한 모멘트 목록 
   notifications Notification[] @relation("UserNotifications") // 사용자 알람 목록 
@@ -48,6 +48,8 @@ model Friend {
   @@unique([userID, friendUserID], name: "userID_friendUserID") // 동일한 사용자 간 중복 친구 관계 방지
 }
 
+
+/*
 model Feed {
   feedID    String   @id @default(auto()) @map("_id") @db.ObjectId
   userID    String // 사용자 ID 참조
@@ -55,17 +57,19 @@ model Feed {
   createdAt DateTime @default(now())
   user      User     @relation("UserFeeds", fields: [userID], references: [userID])
 }
+*/
 
 model FriendFeed {
   friendFeedId String   @id @default(auto()) @map("_id") @db.ObjectId
   userID       String // 피드를 보는 사용자 ID
-  feedID       String   @db.ObjectId // 친구의 피드 ID
+  momentID     String   @db.ObjectId // 친구의 모멘트트 ID
   cheer        Boolean  @default(false)
   createdAt    DateTime @default(now()) // 연결이 생성된 시각
 
   user User @relation("FriendUserFeeds", fields: [userID], references: [userID], onDelete: Cascade)
+  moment Moment @relation("MomentFriendFeeds", fields: [momentID], references: [momentID], onDelete: Cascade)
 
-  @@unique([userID, feedID], name: "userID_feedID")
+  @@unique([userID, momentID], name: "userID_momentID")
 }
 
 model Moment {
@@ -84,6 +88,8 @@ model Moment {
 
   userID String
   user   User   @relation("UserMoments", fields: [userID], references: [userID], onDelete: Cascade)
+
+  friendFeeds FriendFeed[] @relation("MomentFriendFeeds")
 }
 
 model Notification {

@@ -310,41 +310,42 @@ export const knockFriend = async (req, res) => {
 // 친구에게 응원하기
 export const cheerOnFriendFeed = async (req, res) => {
   const userID = req.user.userID; // 인증된 사용자 ID, 토큰에서 추출
-  const feedID = req.params.feedId; // URL 파라미터로 받은 피드 ID
+  const friendID = req.params.friendId; // URL 파라미터로 받은 친구 ID
+  const momentID = req.params.momentId; // URL 파라미터로 받은 피드 ID
 
   try {
-    const feed = await prisma.feed.findUnique({
-      where: { feedID }
+    // 모멘트 확인
+    const moment = await prisma.moment.findUnique({
+      where: { momentID }
     });
 
-    if (!feed) {
-      return res.status(404).json({ message: "해당 피드를 찾을 수 없습니다." });
+    if (!moment) {
+      return res.status(404).json({ message: "해당 모멘트가 존재하지 않습니다." });
     }
 
-    // 2) 응원한 유저 정보 조회
-    const user = await prisma.user.findUnique({
-      where: { userID }
+    if (moment.userID !== friendID) {
+      return res.status(403).json({ message: "이 모멘트는 해당 친구의 것이 아닙니다." });
+    }
+
+    // 친구 관계 확인
+    const friendRelation = await prisma.friend.findUnique({
+      where: {
+        userID_friendUserID: {
+          userID,
+          friendUserID: friendID,
+        },
+      },
     });
 
-    if (!user) {
-      return res.status(404).json({ message: "사용자를 찾을 수 없습니다." });
+    if (!friendRelation) {
+      return res.status(404).json({ message: "해당 사용자와 친구 관계가 아닙니다." });
     }
 
-    // 3) 응원받을 유저(= 해당 피드를 작성한 친구)
-    const friend = await prisma.user.findUnique({
-      where: { userID: feed.userID }
-    });
-
-    if (!friend) {
-      return res.status(404).json({ message: "친구를 찾을 수 없습니다." });
-    }
-
-
-    // 이미 해당 피드에 대해 응원했는지 확인
+    // 중복 응원 확인
     const existingCheer = await prisma.friendFeed.findFirst({
       where: {
         userID: userID,
-        feedID: feedID,
+        momentID: momentID,
         cheer: true  // 이미 응원된 상태를 찾습니다.
       }
     });
@@ -357,19 +358,26 @@ export const cheerOnFriendFeed = async (req, res) => {
     const cheer = await prisma.friendFeed.create({
       data: {
         userID: userID,
-        feedID: feedID,
+        momentID: momentID,
         cheer: true
       }
     });
 
-    // 친구 피드 응원 알림 추가 
-    await prisma.notification.create({
-      data: {
-        userID: friend.userID,
-        type: 'CHEER',
-        content: `${user.nickname}님이 ${friend.nickname}님의 "${feed.content}" 달성을 응원한대요!`,
-      }
-    });
+    // 친구 모멘트 응원 알림 추가 
+    const [friend, user] = await Promise.all([
+      prisma.user.findUnique({ where: { userID: friendID } }),
+      prisma.user.findUnique({ where: { userID } })
+    ]);
+
+    if (friend && user) {
+      await prisma.notification.create({
+        data: {
+          userID: friend.userID,
+          type: 'CHEER',
+          content: `${user.nickname}님이 ${friend.nickname}님의 "${moment.content}" 달성을 응원한대요!`,
+        }
+      });
+    }
 
     res.status(200).json({ message: "피드 응원에 성공했습니다.", data: cheer });
   } catch (err) {
