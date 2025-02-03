@@ -158,7 +158,6 @@ export const updateMoment = async (req, res) => {
     try {
         const userID = req.user.userID;
         const { momentID } = req.params;
-
         // 모멘트+버킷 조회
         const existingMoment = await prisma.moment.findUnique({
             where: { momentID },
@@ -186,61 +185,66 @@ export const updateMoment = async (req, res) => {
         }
     
         // S3 이미지 업로드 처리
-        let photoUrl = null;
+        let newPhotoUrl = null;
         if (req.file) {
-            const bucketName = process.env.AWS_S3_BUCKET_NAME;
-            const key = `moment/${userID}/${momentID}/${Date.now()}`;
-    
-            const command = new PutObjectCommand({
-                Bucket: bucketName,
-                Key: key,
-                Body: req.file.buffer,
-                ContentType: req.file.mimetype,
-            });
-    
-            await s3Client.send(command);
-            photoUrl = `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+            try {
+                const bucketName = process.env.AWS_S3_BUCKET_NAME;
+                const key = `moment/${userID}/${momentID}/${Date.now()}`;
+            
+                const command = new PutObjectCommand({
+                    Bucket: bucketName,
+                    Key: key,
+                    Body: req.file.buffer,
+                    ContentType: req.file.mimetype,
+                });
+            
+                await s3Client.send(command);
+                newPhotoUrl = `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+                console.log('S3 업로드 성공:', newPhotoUrl);
+            } catch (uploadErr) {
+                console.error('S3 업로드 실패:', uploadErr);
+                return res.status(500).json({
+                    success: false,
+                    error: { code: 500, message: 'S3 업로드에 실패했습니다.' },
+                });
+            }
         }
-    
-        // 기존 완료 상태 / 새로운 완료 상태 계산
-        const oldIsCompleted = existingMoment.isCompleted;
-        const newIsCompleted = photoUrl ? true : oldIsCompleted;
-    
-        // 트랜잭션
+            
+            // 트랜잭션
         const result = await prisma.$transaction(async (tx) => {
-            // 1) 모멘트 업데이트
+                // 1) 모멘트 업데이트
             const updatedMoment = await tx.moment.update({
                 where: { momentID },
                 data: {
-                    photoUrl: photoUrl,
+                    photoUrl: newPhotoUrl,
                     isCompleted: true,
                     updatedAt: new Date(),
                 },
             });
-    
-            
-            // 2) 버킷 아래 모든 모멘트 완료 여부 확인
+        
+                
+                // 2) 버킷 아래 모든 모멘트 완료 여부 확인
             const bucketID = existingMoment.bucket.bucketID;
-
-            // 전체 모멘트 개수
+    
+                // 전체 모멘트 개수
             const totalMoments = await tx.moment.count({
                 where: { bucketID },
             });
-
+    
             // 완료된 모멘트 개수
             const completedMoments = await tx.moment.count({
                 where: { bucketID, isCompleted: true },
             });
-
+    
             let updatedBucket = null;
-            // 모든 모멘트가 완료되었으면 버킷도 완료 상태로 업데이트
+                // 모든 모멘트가 완료되었으면 버킷도 완료 상태로 업데이트
             if (totalMoments > 0 && totalMoments === completedMoments) {
                 updatedBucket = await tx.bucket.update({
                     where: { bucketID },
                     data: { isCompleted: true, isChallenging: false, updatedAt: new Date() },
                 });
             }
-
+    
             return { updatedMoment, updatedBucket, totalMoments, completedMoments };
         });
     
