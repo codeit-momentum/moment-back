@@ -107,3 +107,59 @@ export const getAndMarkNotificationsAsRead = async (req, res) => {
     });
   }
 };
+
+export const deleteNotification = async (req, res) => {
+  try {
+    const userID = req.user.userID; // 인증된 사용자 ID
+    const notificationID = req.params.notificationID;
+
+    if (!notificationID) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 400, message: "notificationID는 필수 입력값입니다." }
+      });
+    }
+
+    // 현재 사용자 조회
+    const currentUser = await prisma.user.findUnique({
+      where: { userID },
+    });
+
+    if (!currentUser) { 
+      console.error("사용자 찾을 수 없음")
+      return res.status(404).json({ 
+        success: false,
+        error: { code: 404, message: '현재 사용자를 찾을 수 없습니다.' }
+      });
+    }
+
+    // 현재 알람 조회
+    const currentNotification = await prisma.notification.findUnique({
+      where: { notificationID, userID },
+    });
+
+    if (!currentNotification) { 
+      console.error("현재 알람 찾을 수 없음")
+      return res.status(404).json({ 
+        success: false,
+        error: { code: 404, message: '현재 알람을 찾을 수 없습니다.' }
+      });
+    }
+
+    const deleteNotification = await prisma.notification.delete({
+      where: { notificationID, userID }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "해당 알람을 성공적으로 삭제하였습니다.",
+      deleteNotification: deleteNotification
+    });
+  } catch (err) {
+    console.error("해당 알람 삭제 실패:", err.message);
+    return res.status(500).json({
+      success: false,
+      error: { code: 500, message: "서버 내부 오류가 발생했습니다." }
+    });
+  }
+};
