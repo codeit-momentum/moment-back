@@ -113,13 +113,6 @@ export const deleteNotification = async (req, res) => {
     const userID = req.user.userID; // 인증된 사용자 ID
     const notificationID = req.params.notificationID;
 
-    if (!notificationID) {
-      return res.status(400).json({
-        success: false,
-        error: { code: 400, message: "notificationID는 필수 입력값입니다." }
-      });
-    }
-
     // 현재 사용자 조회
     const currentUser = await prisma.user.findUnique({
       where: { userID },
