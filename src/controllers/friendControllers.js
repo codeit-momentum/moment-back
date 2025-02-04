@@ -242,7 +242,7 @@ export const knockFriend = async (req, res) => {
   const { friendUserID } = req.body; // 노크할 친구의 사용자 ID
 
   try {
-    // 친구 관계 및 최근 피드 정보 검색
+    // 친구 관계 및 최근 피드(모멘트) 정보 검색
     const friendRelation = await prisma.friend.findUnique({
       where: {
         userID_friendUserID: {
@@ -253,7 +253,7 @@ export const knockFriend = async (req, res) => {
       include: {
         friendUser: {
           include: {
-            feeds: true  // 피드 정보 포함
+            moments: true  // 피드(모멘트) 정보 목록록 포함
           },
         },
       }
@@ -263,15 +263,21 @@ export const knockFriend = async (req, res) => {
       return res.status(404).json({ status: "failed", message: "해당 친구를 찾을 수 없습니다." });
     }
 
-    // 친구가 최근 7일 이내에 피드를 올렸는지 확인  -> 내부 확인용
-    if (friendRelation.friendUser.feeds && friendRelation.friendUser.feeds.some(feed => moment(feed.createdAt).isAfter(moment().subtract(7, 'days')))) {
+    // 친구가 최근 7일 이내에 피드(모멘트)를 올렸는지 확인  -> 내부 확인용
+    const sevenDaysAgo = moment().subtract(7, 'days');
+
+    const hasRecentMoment = friendRelation.friendUser.moments.some(momentItem => 
+      momentItem.createdAt && moment(new Date(momentItem.createdAt)).isAfter(sevenDaysAgo)
+    );
+
+    if (hasRecentMoment) {
       return res.status(403).json({ status: "failed", message: "해당 친구는 최근 7일 이내에 피드를 올렸습니다." });
     }
 
     // 주별 노크 제한 검사
     const now = new Date();
     const startOfWeek = moment().startOf('isoWeek').toDate();
-    if (friendRelation.knockedAt && moment(friendRelation.knockedAt).isSameOrAfter(startOfWeek)) {
+    if (friendRelation.knockedAt && moment(new Date(friendRelation.knockedAt)).isSameOrAfter(startOfWeek)) {
       return res.status(403).json({ status: "failed", message: "노크는 일주일에 한 번만 가능합니다." });
     }
 
