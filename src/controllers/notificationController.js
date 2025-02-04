@@ -93,7 +93,7 @@ export const getAndMarkNotificationsAsRead = async (req, res) => {
     return res.status(200).json({
       success: true,
       messages: "알림 목록을 조회하고 읽음 처리하였습니다.",
-      user: currentUser.userID,
+      userID: currentUser.userID,
       notifications: notifications.map(notification => ({
         ...notification,
         isRead: true        // 읽음 상태 반영 
@@ -108,6 +108,7 @@ export const getAndMarkNotificationsAsRead = async (req, res) => {
   }
 };
 
+// 알림 삭제 
 export const deleteNotification = async (req, res) => {
   try {
     const userID = req.user.userID; // 인증된 사용자 ID
