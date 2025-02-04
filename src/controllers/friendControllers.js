@@ -264,14 +264,16 @@ export const knockFriend = async (req, res) => {
     }
 
     // 친구가 최근 7일 이내에 피드(모멘트)를 올렸는지 확인  -> 내부 확인용
-    const sevenDaysAgo = moment().subtract(7, 'days');
+    const sevenDaysAgo = moment().subtract(7, 'days'); // 현재 날짜 기준 7일 전
 
-    const hasRecentMoment = friendRelation.friendUser.moments.some(momentItem => 
-      momentItem.createdAt && moment(new Date(momentItem.createdAt)).isAfter(sevenDaysAgo)
+    const hasRecentCompletedMoment = friendRelation.friendUser.moments.some(momentItem => 
+      momentItem.isCompleted === true &&
+      momentItem.updatedAt && 
+      moment(new Date(momentItem.updatedAt)).isAfter(sevenDaysAgo)
     );
 
-    if (hasRecentMoment) {
-      return res.status(403).json({ status: "failed", message: "해당 친구는 최근 7일 이내에 피드를 올렸습니다." });
+    if (hasRecentCompletedMoment) {
+      return res.status(403).json({ status: "failed", message: "해당 친구는 최근 7일 이내에 완료한 피드(모멘트)가 있습니다." });
     }
 
     // 주별 노크 제한 검사
