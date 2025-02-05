@@ -53,6 +53,7 @@ export const getFriendFeed = async (req, res) => {
         bucketID: true,
         type: true,
         content: true,
+        frequency: true,
       },
     });
   
@@ -109,6 +110,7 @@ export const getFriendFeed = async (req, res) => {
           bucketContent: bucket.content,
           momentContent: moment.content,
           imageUrl: moment.photoUrl,
+          frequency: bucket.frequency,
           date: moment.updatedAt,
           cheered: friendFeed ? friendFeed.cheer : false, // 사용자가 응원한 경우 true, 없으면 false
         });

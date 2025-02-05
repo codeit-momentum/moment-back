@@ -82,6 +82,7 @@ model Moment {
   startDate   DateTime?
   endDate     DateTime?
 
+
   // 어떤 버킷에 속하는지
   bucketID String @db.ObjectId
   bucket   Bucket @relation("BucketMoments", fields: [bucketID], references: [bucketID], onDelete: Cascade)
@@ -90,6 +91,13 @@ model Moment {
   user   User   @relation("UserMoments", fields: [userID], references: [userID], onDelete: Cascade)
 
   friendFeeds FriendFeed[] @relation("MomentFriendFeeds")
+}
+
+enum Frequency {
+  daily //하루에 한번
+  every2days //2일에 한번
+  weekly //일주일에 한번
+  monthly //한달에 한번번
 }
 
 model Notification {
@@ -116,6 +124,7 @@ model Bucket {
   photoUrl    String? // 인증사진 경로 (S3 업로드)
   isCompleted Boolean? @default(false) // 달성형이 완료됐는지
 
+  frequency   Frequency @default(daliy)
   isChallenging         Boolean   @default(false)
   startDate             DateTime?
   endDate               DateTime?
