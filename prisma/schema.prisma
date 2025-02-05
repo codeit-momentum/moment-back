@@ -124,7 +124,7 @@ model Bucket {
   photoUrl    String? // 인증사진 경로 (S3 업로드)
   isCompleted Boolean? @default(false) // 달성형이 완료됐는지
 
-  frequency   Frequency @default(daliy)
+  frequency   Frequency @default(daily)
   isChallenging         Boolean   @default(false)
   startDate             DateTime?
   endDate               DateTime?
