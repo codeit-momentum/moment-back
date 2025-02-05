@@ -94,7 +94,7 @@ model Moment {
 }
 
 enum Frequency {
-  daliy //하루에 한번
+  daily //하루에 한번
   every2days //2일에 한번
   weekly //일주일에 한번
   monthly //한달에 한번번
