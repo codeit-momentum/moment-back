@@ -9,7 +9,7 @@ export const createMoments = async (req, res) => {
     try {
         const userID = req.user.userID;
         const { bucketID } = req.params;
-        const { startDate, endDate, moments } = req.body;
+        const { startDate, endDate, moments, frequency } = req.body;
 
         // 1) 요청 검증
         if (!Array.isArray(moments) || moments.length === 0) {
@@ -73,6 +73,7 @@ export const createMoments = async (req, res) => {
                     startDate: startDate ? new Date(startDate) : bucket.startDate,
                     endDate: endDate ? new Date(endDate) : bucket.endDate,
                     updatedAt: new Date(),
+                    frequency,
                 },
             });
             
