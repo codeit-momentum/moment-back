@@ -45,26 +45,56 @@ export const createMoments = async (req, res) => {
                 },
             });
         }
+        const toStartOfDay = (dateStr) => {
+            // dateStr 예: "2024-01-20"
+            const d = new Date(`${dateStr}T00:00:00`); // 날짜를 0시 0분 0초로
+            // 아래 setHours로 더 정확히 0,0,0,0 설정
+            d.setHours(0, 0, 0, 0);
+            return d;
+        };
+        const toEndOfDay = (dateStr) => {
+            const d = new Date(`${dateStr}T00:00:00`); 
+            // 날짜를 23:59:59.999로
+            d.setHours(23, 59, 59, 999);
+            return d;
+        };
+
+          // 버킷의 startDate, endDate 변환
+          let bucketStart = bucket.startDate; // 기존 값
+          let bucketEnd = bucket.endDate;     // 기존 값
+
+        if (startDate) {
+            bucketStart = toStartOfDay(startDate);
+        }
+        if (endDate) {
+            bucketEnd = toEndOfDay(endDate);
+        }
+
         
         // 3) 트랜잭션
         const result = await prisma.$transaction(async (tx) => {
         
             //  여러 모멘트 생성
-            const createdMoments = await Promise.all(
-                moments.map((m) =>
-                    tx.moment.create({
-                        data: {
-                            content: m.content || '',
-                            photoUrl: null,
-                            isCompleted: false,
-                            startDate: new Date(m.startDate),
-                            endDate: new Date(m.endDate),
-                            bucketID: bucketID,
-                            userID: userID,
-                        },
-                    })
-                )
-            );
+            const createdMoments = [];
+
+            for (const m of moments) {
+                // m.startDate, m.endDate (YYYY-MM-DD) → 실제 Date로 변환
+                const mStart = toStartOfDay(m.startDate);
+                const mEnd = toEndOfDay(m.endDate);
+
+                const momentCreated = await tx.moment.create({
+                data: {
+                    content: m.content || '',
+                    photoUrl: null,
+                    isCompleted: false,
+                    startDate: mStart,
+                    endDate: mEnd,
+                    bucketID: bucketID,
+                    userID: userID,
+                },
+            });
+            createdMoments.push(momentCreated);
+        }
             //  버킷의 startDate, endDate 업데이트
             //      (이미 값이 있다면 덮어쓰기, 없으면 새로 세팅)
             const updatedBucket = await tx.bucket.update({
