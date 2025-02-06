@@ -100,7 +100,19 @@ export const getMomentsByBucket = async (req, res) => {
     try {
         const userID = req.user.userID;
         const { bucketID } = req.params;
-    
+        
+
+        // 버킷리스트 ENDDATE 확인(지났을 경우 FALSE 처리)
+        await prisma.bucket.updateMany({
+            where: {
+                userID,
+                isChallenging: true,
+                endDate: { not: null, lt: now },
+            },
+            data: {
+                isChallenging: false,
+            },
+        });
         //버킷 조회
         const bucket = await prisma.bucket.findUnique({
             where: { bucketID },
@@ -308,7 +320,18 @@ export const getChallengingBucketsAndMoments = async (req, res) => {
     try {
         const userID = req.user.userID;
         const now = new Date(); // 현재 시각
-    
+
+        // 0) 만료된 버킷 처리
+        await prisma.bucket.updateMany({
+            where: {
+                userID,
+                isChallenging: true,
+                endDate: { not: null, lt: now },
+            },
+            data: {
+                isChallenging: false,
+            },
+        });
         // 1) 도전 중인(isChallenging=true) 버킷들 조회
         //    해당 유저의 버킷만
         const buckets = await prisma.bucket.findMany({
