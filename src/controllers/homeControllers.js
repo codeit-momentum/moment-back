@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { parseISO, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
+import { startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
 
 const prisma = new PrismaClient();
 
@@ -8,7 +8,7 @@ export const getHome = async (req, res) => {
     try {
       // 현재 인증된 사용자 정보 가져오기
       const userID = req.user.userID; // 현재 사용자 ID
-      const dateString = req.body.date;
+      const dateString = req.params.date;
 
       // 현재 사용자 조회
       const currentUser = await prisma.user.findUnique({
@@ -21,13 +21,6 @@ export const getHome = async (req, res) => {
           error: { code: 404, message: '현재 사용자를 찾을 수 없습니다.' }
         });
       };
-
-      if (!dateString) {
-        return res.status(400).json({
-          success: false,
-          error: { code: 400, message: "날짜(date)는 필수 입력값입니다." }
-        });
-      }
       
       const date = new Date(dateString); // 문자열 날짜 => Date 객체
       if (isNaN(date.getTime())) {
@@ -82,7 +75,7 @@ export const getHome = async (req, res) => {
 export const getCompletedMomentsByWeek = async (req, res) => {
   try {
     const userID = req.user.userID; // 인증된 사용자 ID
-    const dateString = req.body.date;
+    const dateString = req.params.date;  
 
     // 현재 사용자 조회
     const currentUser = await prisma.user.findUnique({
@@ -95,13 +88,6 @@ export const getCompletedMomentsByWeek = async (req, res) => {
         error: { code: 404, message: '현재 사용자를 찾을 수 없습니다.' }
       });
     };
-
-    if (!dateString) {
-      return res.status(400).json({
-        success: false,
-        error: { code: 400, message: "날짜(date)는 필수 입력값입니다." }
-      });
-    }
     
     const date = new Date(dateString); // 문자열 날짜 => Date 객체
     if (isNaN(date.getTime())) {
@@ -172,7 +158,7 @@ export const getCompletedMomentsByWeek = async (req, res) => {
 export const getConsecutiveCompletedDays = async (req, res) => {
   try {
     const userID = req.user.userID; // 인증된 사용자 ID
-    const dateString = req.body.date;
+    const dateString = req.params.date;     
 
     // 현재 사용자 조회
     const currentUser = await prisma.user.findUnique({
@@ -183,13 +169,6 @@ export const getConsecutiveCompletedDays = async (req, res) => {
       return res.status(404).json({
         success: false,
         error: { code: 404, message: '현재 사용자를 찾을 수 없습니다.' }
-      });
-    }
-
-    if (!dateString) {
-      return res.status(400).json({
-        success: false,
-        error: { code: 400, message: "날짜(date)는 필수 입력값입니다." }
       });
     }
     
