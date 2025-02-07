@@ -10,14 +10,6 @@ export const getHome = async (req, res) => {
       const userID = req.user.userID; // 현재 사용자 ID
       const dateString = req.params.date;
 
-      // 필수 파라미터 확인 (date가 없는 경우)
-      if (!dateString) {
-        return res.status(400).json({
-          success: false,
-          error: { code: 400, message: "날짜 파라미터 (YYYY-MM-DD)를 입력해야 합니다." },
-        });
-      }
-
       // 현재 사용자 조회
       const currentUser = await prisma.user.findUnique({
         where: { userID },
@@ -83,15 +75,7 @@ export const getHome = async (req, res) => {
 export const getCompletedMomentsByWeek = async (req, res) => {
   try {
     const userID = req.user.userID; // 인증된 사용자 ID
-    const dateString = req.params.date;
-
-    // 필수 파라미터 확인 (date가 없는 경우)
-    if (!dateString) {
-      return res.status(400).json({
-        success: false,
-        error: { code: 400, message: "날짜 파라미터 (YYYY-MM-DD)를 입력해야 합니다." },
-      });
-    }    
+    const dateString = req.params.date;  
 
     // 현재 사용자 조회
     const currentUser = await prisma.user.findUnique({
@@ -174,15 +158,7 @@ export const getCompletedMomentsByWeek = async (req, res) => {
 export const getConsecutiveCompletedDays = async (req, res) => {
   try {
     const userID = req.user.userID; // 인증된 사용자 ID
-    const dateString = req.params.date;
-
-    // 필수 파라미터 확인 (date가 없는 경우)
-    if (!dateString) {
-      return res.status(400).json({
-        success: false,
-        error: { code: 400, message: "날짜 파라미터 (YYYY-MM-DD)를 입력해야 합니다." },
-      });
-    }      
+    const dateString = req.params.date;     
 
     // 현재 사용자 조회
     const currentUser = await prisma.user.findUnique({
