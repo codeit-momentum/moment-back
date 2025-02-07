@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
+import { eachDayOfInterval, endOfWeek, startOfWeek } from "date-fns";
 
 const prisma = new PrismaClient();
 
@@ -217,6 +217,39 @@ export const getConsecutiveCompletedDays = async (req, res) => {
     return res.status(500).json({
       success: false,
       error: { code: 500, message: "서버 내부 오류가 발생했습니다." }
+    });
+  }
+};
+
+export const getCompletedBucket = async (req, res) => {
+  try {
+    const userID = req.user.userID; // JWT 인증 후 주입된 userID
+
+    // 전체 버킷 수
+    const totalBuckets = await prisma.bucket.count({
+        where: { userID },
+    });
+    
+        // 완료된 버킷 수
+    const completedBucketsCount = await prisma.bucket.count({
+        where: { userID, isCompleted: true },
+    });
+
+    const completionRate = totalBuckets === 0
+      ? 0
+      : (completedBucketsCount / totalBuckets) * 100;
+
+
+    return res.status(200).json({
+      success: true,
+      completedBucketsCount: completedBucketsCount,
+      completionRate: completionRate.toFixed(2),
+    });
+  } catch (error) {
+    console.error('버킷 달성 현황 조회 실패:', error);
+    return res.status(500).json({
+      success: false,
+      error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
     });
   }
 };
