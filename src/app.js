@@ -18,7 +18,8 @@ const app = express();
 const corsOptions = {
   origin: [
     'http://localhost:5173', // 프론트엔드 로컬 환경
-    'https://codeit.momentum.vercel.app', // 프론트엔드 배포 환경
+    'https://codeit-momentum.vercel.app', // 프론트엔드 배포 환경
+    'https://www.codeit-momentum.shop',
   ],
   credentials: true, // 쿠키 및 인증 헤더 허용
   exposedHeaders: ['x-access-token'],
