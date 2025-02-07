@@ -351,17 +351,36 @@ export const getChallengingBucketsAndMoments = async (req, res) => {
         const userID = req.user.userID;
         const now = new Date(); // 현재 시각
 
-        // 0) 만료된 버킷 처리
-        await prisma.bucket.updateMany({
+        // 0) 만료된 버킷 처리 (버킷 ID 찾기)
+        const expiredBuckets = await prisma.bucket.updateMany({
             where: {
                 userID,
                 isChallenging: true,
                 endDate: { not: null, lt: now },
             },
-            data: {
-                isChallenging: false,
-            },
+            select: { bucketID: true },
         });
+
+        const expiredBucketIDs = expiredBuckets.map(b => b.bucketID);
+
+        if (expiredBucketIDs.length > 0) {
+            // (A) 만료된 버킷들의 모든 모멘트 삭제
+            await prisma.moment.deleteMany({
+                where: {
+                    bucketID: { in: expiredBucketIDs }
+                }
+            });
+
+            // (B) 만료된 버킷들의 isChallenging 값 false로 변경
+            await prisma.bucket.updateMany({
+                where: {
+                    bucketID: { in: expiredBucketIDs }
+                },
+                data: {
+                    isChallenging: false,
+                },
+            });
+        }
         // 1) 도전 중인(isChallenging=true) 버킷들 조회
         //    해당 유저의 버킷만
         const buckets = await prisma.bucket.findMany({
