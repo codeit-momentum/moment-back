@@ -352,7 +352,7 @@ export const getChallengingBucketsAndMoments = async (req, res) => {
         const now = new Date(); // 현재 시각
 
         // 0) 만료된 버킷 처리 (버킷 ID 찾기)
-        const expiredBuckets = await prisma.bucket.updateMany({
+        const expiredBuckets = await prisma.bucket.findMany({
             where: {
                 userID,
                 isChallenging: true,
