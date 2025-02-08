@@ -18,7 +18,7 @@ export const getUnreadNotificationsCount = async (userID) => {
 
 export const sendNewNotificationsCount = async (req, res) => {
   try {
-    const userID = req.user.userID;
+    const userID = req.query.userID;
 
     // 현재 사용자 조회
     const currentUser = await prisma.user.findUnique({
