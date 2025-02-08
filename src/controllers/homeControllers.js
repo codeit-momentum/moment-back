@@ -158,7 +158,7 @@ export const getCompletedMomentsByWeek = async (req, res) => {
     console.error("주간 완료 데이터 조회 실패:", err.message);
     return res.status(500).json({
       success: false,
-      error: { code: 500, message: "서버 내부 오류가 발생했습니다." }
+      error: { code: 500, message: err.message }
     });
   }
 };
