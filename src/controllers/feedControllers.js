@@ -56,7 +56,7 @@ export const getFriendFeed = async (req, res) => {
         bucketID: true,
         type: true,
         content: true,
-        //frequency: true,
+        frequency: true,
       },
     });
   
