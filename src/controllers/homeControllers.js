@@ -118,15 +118,15 @@ export const getCompletedMomentsByWeek = async (req, res) => {
     const moments = await prisma.moment.findMany({
       where: {
         userID: userID, // 현재 사용자만 조회
-        date: {
-          gte: startDate,
-          lte: endDate
-        },
+        OR: weekDates.map(day => ({
+          startDate: { lte: day },
+          endDate: { gte: day }
+        }))
       },
-      orderBy: { date: "asc" },
       select: {
-        date: true,
-        complete: true,
+        startDate: true,
+        endDate: true,
+        isCompleted: true,
       }
     });
 
