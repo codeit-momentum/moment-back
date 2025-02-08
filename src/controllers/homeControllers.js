@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
-import { startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
+import { eachDayOfInterval } from "date-fns";
+
 
 const prisma = new PrismaClient();
 
@@ -71,7 +72,6 @@ export const getHome = async (req, res) => {
     }
   };
   
-// 일주일 완료 상태 조회 
 export const getCompletedMomentsByWeek = async (req, res) => {
   try {
     const userID = req.user.userID; // 인증된 사용자 ID
@@ -89,7 +89,7 @@ export const getCompletedMomentsByWeek = async (req, res) => {
       });
     };
     
-    const date = new Date(dateString); // 문자열 날짜 => Date 객체
+    const date = new Date(dateString);
     if (isNaN(date.getTime())) {
       return res.status(400).json({
         success: false,
@@ -97,13 +97,23 @@ export const getCompletedMomentsByWeek = async (req, res) => {
       });
     }
 
-    // 해당 날짜가 포함된 주의 시작(월요일)과 끝(일요일) 계산
-    const startDate = startOfWeek(date, { weekStartsOn: 2 }); // 월요일 기준 시작
-    const endDate = endOfWeek(date, { weekStartsOn: 2 }); // 일요일 기준 끝
-
-    // 월요일부터 일요일까지의 모든 날짜 배열 생성
-    const weekDates = eachDayOfInterval({ start: startDate, end: endDate });
-
+    // 해당 날짜가 포함된 주의 월요일 찾기
+    const dayOfWeek = date.getDay(); // 요일을 0 (일요일)부터 6 (토요일)까지 반환
+    const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // 월요일까지의 차이 계산
+    const startOfWeek = new Date(date);
+    startOfWeek.setDate(date.getDate() + diffToMonday); // 월요일로 설정
+    
+    // 일요일 계산
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    
+    // 월요일부터 일요일까지 날짜 배열 생성
+    const weekDates = [];
+    for (let i = 0; i < 7; i++) {
+        const weekDay = new Date(startOfWeek);
+        weekDay.setDate(startOfWeek.getDate() + i);
+        weekDates.push(weekDay); // "YYYY-MM-DD" 형식으로 변환하여 배열에 추가
+    }
 
     // 해당 주의 모든 moment 가져오기 (startDate와 endDate 범위로 필터링)
     const moments = await prisma.moment.findMany({
@@ -129,7 +139,7 @@ export const getCompletedMomentsByWeek = async (req, res) => {
 
       // 모든 moment가 완료 상태인지 확인 (하나라도 false면 false 처리)
       const isComplete =
-        momentsForDate.length > 0 && momentsForDate.some(m => m.isCompleted);
+        momentsForDate.length > 0 && momentsForDate.every(m => m.isCompleted);
 
       return {
         date: day.toISOString().split("T")[0], // 날짜를 YYYY-MM-DD 형식으로 반환
@@ -140,8 +150,8 @@ export const getCompletedMomentsByWeek = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "해당 주의 완료된 데이터를 성공적으로 조회하였습니다.",
-      startDate: startDate.toISOString().split("T")[0],
-      endDate: endDate.toISOString().split("T")[0],
+      startDate: startOfWeek.toISOString().split("T")[0],
+      endDate: endOfWeek.toISOString().split("T")[0],
       weekStatus: results
     });
 
@@ -154,7 +164,7 @@ export const getCompletedMomentsByWeek = async (req, res) => {
   }
 };
 
-// 연속적으로 인증한 날짜 조회
+// 연속적으로 인증한 날짜 조회 (작심 N일일)
 export const getConsecutiveCompletedDays = async (req, res) => {
   try {
     const userID = req.user.userID; // 인증된 사용자 ID
