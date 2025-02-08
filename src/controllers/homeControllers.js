@@ -47,7 +47,8 @@ export const getHome = async (req, res) => {
       });
     }
   };
-  
+
+// 일주일 모멘트 완료 여부 확인 
 export const getCompletedMomentsByWeek = async (req, res) => {
   try {
     // 현재 사용자 조회
