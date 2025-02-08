@@ -16,6 +16,9 @@ export const getFriendFeed = async (req, res) => {
           { userID: friendID, friendUserID: userID },
         ],
       },
+      select: {
+        isKnock: true,  // ✅ isKnock 값 가져오기
+      },
     });
 
     if (friendRelation.length === 0) {
@@ -53,7 +56,7 @@ export const getFriendFeed = async (req, res) => {
         bucketID: true,
         type: true,
         content: true,
-        frequency: true,
+        //frequency: true,
       },
     });
   
@@ -91,13 +94,13 @@ export const getFriendFeed = async (req, res) => {
         orderBy: {
           updatedAt: "desc",
         },
-      });
+      });      
 
-      // ✅ 사용자가 해당 모멘트에 응원했는지 확인
-      for (const moment of bucketMoments) {
+       // ✅ 사용자가 해당 모멘트에 응원했는지 확인
+       for (const moment of bucketMoments) {
         const friendFeed = await prisma.friendFeed.findFirst({
           where: {
-            userID,  // 조회하는 사용자
+            userID: friendID,  // 조회하는 사용자
             momentID: moment.momentID, // 친구의 모멘트
           },
           select: {
@@ -133,6 +136,7 @@ export const getFriendFeed = async (req, res) => {
       status: "success",
       friendCode: friend.friendCode,
       nickname: friend.nickname,
+      isKnock: friendRelation[0]?.isKnock || false,  // ✅ 응답에 isKnock 추가
       moments,
     });
   } catch (error) {

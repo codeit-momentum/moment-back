@@ -1,7 +1,17 @@
 import { PrismaClient } from '@prisma/client';
 
 // Prisma Hook (새로운 알림이 생성될 때 자동 실행)
-const prisma = new PrismaClient();
+const prisma = new PrismaClient().$extends({
+  query: {
+      notification: {
+          async create({ args, query }) {
+              const result = await query(args); // 실제 DB 저장 실행
+              notifyClients(result.userID); // 새로운 알림이 생성되면 클라이언트에게 알림 전송
+              return result;
+          }
+      }
+  }
+});
 
 // 새 알림 개수 가져오기 
 export const getUnreadNotificationsCount = async (userID) => {
@@ -16,17 +26,13 @@ export const getUnreadNotificationsCount = async (userID) => {
   }
 };
 
-export const sendNewNotificationsCount = async (req, res) => {
-  const { userID, token } = req.query; // URL에서 userID와 token 추출
+// Long Polling 요청을 처리하는 엔드포인트
+const pendingRequests = new Map();
 
-  if (!token) {
-    return res.status(401).json({ error: "Unauthorized: No token provided" });
-  }
-
+// LongPolling 방식으로 알림 개수 보내기 
+export const longPollingNotifications = async (req, res) => {
   try {
-    // ✅ 토큰 검증 (예: JWT)
-    const decoded = jwt.verify(token, "your_secret_key");
-    console.log("User verified:", decoded);
+    const userID = req.user.userID;
 
     // 현재 사용자 조회
     const currentUser = await prisma.user.findUnique({
@@ -40,40 +46,87 @@ export const sendNewNotificationsCount = async (req, res) => {
       });
     }
 
-    // 헤더 설정
-    res.setHeader('Authorization', `Bear ${token}`)
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
+    // 현재 읽지 않은 알림 개수 확인
+    const initialCount = await getUnreadNotificationsCount(userID);
 
-    // 주기적으로 클라이언트로 데이터 전송
-    const sendCount = async () => {
+    // 클라이언트를 대기열에 추가
+    pendingRequests.set(userID, { res, initialCount });
+
+    console.log(`Long polling started for userID: ${userID}`);
+
+    // 주기적으로 새로운 알림 확인 (5초마다 체크)
+    const interval = setInterval(async () => {
       try {
-        const count = await getUnreadNotificationsCount(userID); // 비동기 처리 추가
-        const data = { count, timestamp: new Date() };
-        res.write(`data: ${JSON.stringify(data)}\n\n`);
+        const newCount = await getUnreadNotificationsCount(userID);
+
+        if (newCount > initialCount) {
+            console.log(`New notification detected for userID: ${userID}`);
+
+            // 클라이언트에게 응답 보내기
+            res.json({ type: 'newNotificationCount', count: newCount });
+
+            // 대기열에서 제거 후 인터벌 정리
+            pendingRequests.delete(userID);
+            clearInterval(interval);
+        }
       } catch (error) {
-        console.error('알림 개수 조회 오류:', error);
+        console.error('알림 갱신 중 오류 발생:', error);
+        res.status(500).json({ 
+          success: false, 
+          error: { code: 500, message: '알림 갱신 중 오류가 발생했습니다.' } 
+        });
+        pendingRequests.delete(userID);
+        clearInterval(interval);
       }
-    };
+    }, 5000); 
 
-    // 즉시 실행 (초기 데이터 전송)
-    await sendCount();
+    // 30초 후 타임아웃 처리
+    setTimeout(() => {
+        if (pendingRequests.has(userID)) {
+            console.log(`Long polling timeout for userID: ${userID}`);
 
-    // 10초마다 실행
-    const interval = setInterval(sendCount, 10000);
+            res.json({ type: 'newNotificationCount', count: initialCount });
 
-    // 연결 종료 처리
-    req.on('close', () => {
-      console.log('Client disconnected');
-      clearInterval(interval);
-    });
-  } catch (err) {
-    console.error('실시간 새로운 알림 개수 전송 실패:', err.message);
+            pendingRequests.delete(userID);
+            clearInterval(interval);
+        }
+    }, 30000);
+  } catch (error) {
+    console.error('Long polling 요청 중 오류 발생:', error);
     res.status(500).json({ 
-      success: false,
-      error: { code: 500, message: '서버 내부 오류가 발생했습니다.' }
+      success: false, 
+      error: { code: 500, message: '서버 오류가 발생했습니다.' } 
     });
+  }
+};
+
+// 새로운 알림이 생성될 때 대기 중인 클라이언트에게 알림 전송
+export const notifyClients = async (userID) => {
+  try {
+    if (pendingRequests.has(userID)) {
+        const { res, initialCount } = pendingRequests.get(userID);
+        const newCount = await getUnreadNotificationsCount(userID);
+
+        if (newCount > initialCount) {
+            console.log(`Notifying client about new notifications for userID: ${userID}`);
+
+            res.json({ type: 'newNotificationCount', count: newCount });
+
+            // 대기열에서 제거
+            pendingRequests.delete(userID);
+        }
+    }
+  } catch (error) {
+    console.error('클라이언트 알림 전송 중 오류 발생:', error);
+    // 클라이언트에게 알림 전송 오류 처리
+    if (pendingRequests.has(userID)) {
+        const { res } = pendingRequests.get(userID);
+        res.status(500).json({ 
+          success: false, 
+          error: { code: 500, message: '알림 전송 중 오류가 발생했습니다.' } 
+        });
+        pendingRequests.delete(userID);
+    }
   }
 };
 
