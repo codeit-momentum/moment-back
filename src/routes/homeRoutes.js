@@ -1,7 +1,7 @@
 import express from 'express';
 import { getCompletedBucket, getCompletedMomentsByWeek, getConsecutiveCompletedDays, getHome } from '../controllers/homeControllers.js';
 import { jwtMiddleware } from '../middlewares/jwtMiddlewares.js';
-import { deleteNotification, getAndMarkNotificationsAsRead, longPollingNotifications } from '../controllers/notificationController.js';
+import { deleteNotification, getAndMarkNotificationsAsRead, longPollingNotifications } from '../controllers/notificationControllers.js';
 
 const router = express.Router();
 
