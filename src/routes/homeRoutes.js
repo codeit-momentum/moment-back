@@ -1,5 +1,5 @@
 import express from 'express';
-import { getCompletedMomentsByWeek, getConsecutiveCompletedDays, getHome } from '../controllers/homeControllers.js';
+import { getCompletedBucket, getCompletedMomentsByWeek, getConsecutiveCompletedDays, getHome } from '../controllers/homeControllers.js';
 import { jwtMiddleware } from '../middlewares/jwtMiddlewares.js';
 import { deleteNotification, getAndMarkNotificationsAsRead, longPollingNotifications } from '../controllers/notificationController.js';
 
@@ -15,5 +15,7 @@ router.get('/momentsComplete/week/:date', getCompletedMomentsByWeek);         //
 router.patch('/notifications', getAndMarkNotificationsAsRead);          // 알림 조회 및 읽음 처리 
 router.get('/notifications/unreadCount', longPollingNotifications); 
 router.delete('/notifications/:notificationID', deleteNotification);    // 알림 삭제 
+
+router.get('/', getCompletedBucket);                                    // 버킷리스트 달성 현황 조회 
 
 export default router;
