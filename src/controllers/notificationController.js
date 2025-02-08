@@ -17,8 +17,16 @@ export const getUnreadNotificationsCount = async (userID) => {
 };
 
 export const sendNewNotificationsCount = async (req, res) => {
+  const { userID, token } = req.query; // URL에서 userID와 token 추출
+
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized: No token provided" });
+  }
+
   try {
-    const userID = req.query.userID;
+    // ✅ 토큰 검증 (예: JWT)
+    const decoded = jwt.verify(token, "your_secret_key");
+    console.log("User verified:", decoded);
 
     // 현재 사용자 조회
     const currentUser = await prisma.user.findUnique({
@@ -33,6 +41,7 @@ export const sendNewNotificationsCount = async (req, res) => {
     }
 
     // 헤더 설정
+    res.setHeader('Authorization', `Bear ${token}`)
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
