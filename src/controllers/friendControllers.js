@@ -218,6 +218,16 @@ export const deleteFriend = async (req, res) => {
       },
     });
 
+    // FriendFeed 데이터 삭제
+    await prisma.friendFeed.deleteMany({
+      where: {
+        OR: [
+          { userID: userID, moment: { userID: friendUserID } },  // 내가 친구의 모멘트를 본 기록 삭제
+          { userID: friendUserID, moment: { userID: userID } },  // 친구가 내 모멘트를 본 기록 삭제
+        ],
+      },
+    });
+
     res.status(200).json({ message: '친구 관계를 성공적으로 삭제하였습니다.' });
   } catch (err) {
     console.error('친구 삭제 오류:', err.message);
