@@ -442,3 +442,28 @@ export const getChallengingBucketsAndMoments = async (req, res) => {
         });
     }
 };
+
+
+export const getChallengingBucketCount = async (req, res) => {
+    try {
+      const userID = req.user.userID; // JWT 인증 후, userID 획득
+        // 1) 현재 유저의 도전 중 버킷 갯수
+        const challengingCount = await prisma.bucket.count({
+            where: {
+            userID,
+            isChallenging: true,
+            },
+        });
+    
+        return res.status(200).json({
+            success: true,
+            challengingCount, // 도전 중 버킷 갯수
+        });
+        } catch (error) {
+        console.error('도전 중 버킷 개수 조회 실패:', error);
+        return res.status(500).json({
+            success: false,
+            error: { code: 500, message: '서버 내부 오류가 발생했습니다.' },
+        });
+    }
+};
