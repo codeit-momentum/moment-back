@@ -115,7 +115,7 @@ export const getFriendFeed = async (req, res) => {
           imageUrl: moment.photoUrl,
           frequency: bucket.frequency,
           date: moment.updatedAt,
-          cheered: friendFeed.cheer,
+          cheered: friendFeed?.cheer ?? false,
         });
       }
     }
