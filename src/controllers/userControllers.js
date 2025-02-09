@@ -200,13 +200,7 @@ export const deleteUser = async (req, res) => {
 
   try {
     // 현재 요청한 사용자 조회
-    const currentUser = await prisma.user.findUnique({
-      where: { userID },
-    });
-
-    if (!currentUser) {
-      return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
-    }
+    const userID = req.user.userID;
 
     // 사용자 삭제 (연관된 데이터 Cascade로 삭제)
     await prisma.$transaction(async (tx) => {
