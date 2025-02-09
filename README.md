@@ -1,11 +1,8 @@
-# 모멘텀 프로젝트 (백엔드)
-
 # ✨ 프로젝트명: 모멘텀 (Momentum)
+[image](https://github.com/user-attachments/assets/f7d41c75-b81f-4cf0-8116-336280b95f33)
 
 **서비스 소개:**  
 모멘텀은 사용자가 신년 계획을 포함한 다양한 목표를 효과적으로 관리하고 성취하도록 돕는 목표 관리 및 성취 지원 서비스입니다. 현실적인 목표 설정과 꾸준한 실행을 통해 성공 경험을 쌓을 수 있도록 설계되었습니다.
-
-![Momentum Logo]![image](https://github.com/user-attachments/assets/f7d41c75-b81f-4cf0-8116-336280b95f33)
 
 
 \n
