@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import { activateBucketChallenge, createBucket, deactivateBucketChallenge, deleteBucket, getAchievementBuckets, getBucketDetail, getCompletedBuckets, getRepeatBuckets, updateBucket, uploadAchievementPhoto } from '../controllers/bucketControllers.js';
-import { createMoments, getChallengingBucketsAndMoments, getDetailMoment, getMomentsByBucket, updateMoment } from '../controllers/momentControllers.js';
+import { createMoments, getChallengingBucketCount, getChallengingBucketsAndMoments, getDetailMoment, getMomentsByBucket, updateMoment } from '../controllers/momentControllers.js';
 import { jwtMiddleware } from '../middlewares/jwtMiddlewares.js';
 
 const router = express.Router();
@@ -28,6 +28,7 @@ router.post('/moments/:bucketID', createMoments);
 router.get('/moments/:bucketID', getMomentsByBucket); // (반복형) 버킷리스트의 모멘트들 조회
 router.get('/moment/:momentID', getDetailMoment); // 선택한 모멘트의 상세 조회
 router.patch('/moments/:momentID', upload.single('photoUrl'), updateMoment); //모멘트 달성
+router.get('/challenging/count', getChallengingBucketCount);
 
 // 도전중인 버킷과 모멘트 조회(모멘트 메인화면)
 router.get('/challenging/main', getChallengingBucketsAndMoments);
