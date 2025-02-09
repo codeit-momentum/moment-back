@@ -15,14 +15,13 @@
 ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=MongoDB&logoColor=white)  
 ![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=JSON%20web%20tokens&logoColor=white)
 
-- **언어**: Node.js (ES6+)
+- **언어**: Node.js
 - **프레임워크**: Express.js
 - **DB ORM**: Prisma
 - **데이터베이스**: MongoDB
 - **인증**: JWT, Kakao OAuth
 - **기타**: 환경 변수 관리 (`dotenv`)
 
-\n
 
 ---
 
