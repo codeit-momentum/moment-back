@@ -115,7 +115,7 @@ export const getFriendFeed = async (req, res) => {
           imageUrl: moment.photoUrl,
           frequency: bucket.frequency,
           date: moment.updatedAt,
-          cheered: friendFeed ? friendFeed.cheer : false, // 기본값 false설정
+          cheered: friendFeed?.cheer ?? false,
         });
       }
     }
