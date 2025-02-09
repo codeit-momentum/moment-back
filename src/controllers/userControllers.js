@@ -201,9 +201,13 @@ export const deleteUser = async (req, res) => {
   try {
     // 현재 요청한 사용자 조회
     const userID = req.user.userID;
+    
 
     // 사용자 삭제 (연관된 데이터 Cascade로 삭제)
     await prisma.$transaction(async (tx) => {
+      await tx.notification.deleteMany({
+        where: { userID: userID }
+      });
       // 1️⃣ 친구 관계 삭제 (user가 포함된 모든 Friend 관계 삭제)
       await tx.friend.deleteMany({
           where: {
