@@ -217,6 +217,9 @@ export const deleteUser = async (req, res) => {
               ]
           }
       });
+      await tx.friendFeed.deleteMany({
+        where: { userID: userID }
+      });
 
       // 2️⃣ 모멘트 삭제 (해당 사용자가 생성한 모든 모멘트 삭제)
       await tx.moment.deleteMany({
