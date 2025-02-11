@@ -5,11 +5,11 @@ import dotenv from 'dotenv';
 import 'dotenv-flow/config';
 import express from 'express';
 import authRoutes from './routes/authRoutes.js';
+import feedRoutes from './routes/feedRoutes.js';
 import friendRoutes from './routes/friendRoutes.js';
 import homeRoutes from "./routes/homeRoutes.js";
 import momentRoutes from "./routes/momentRoutes.js";
 import userRoutes from './routes/userRoutes.js';
-import feedRoutes from './routes/feedRoutes.js';
 
 dotenv.config({override: true});
 
@@ -22,6 +22,7 @@ const corsOptions = {
     'https://www.codeit-momentum.shop',
   ],
   credentials: true, // 쿠키 및 인증 헤더 허용
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-access-token'],
   exposedHeaders: ['x-access-token'],
 }
 

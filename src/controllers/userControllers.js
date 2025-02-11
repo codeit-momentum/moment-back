@@ -200,18 +200,43 @@ export const deleteUser = async (req, res) => {
 
   try {
     // 현재 요청한 사용자 조회
-    const currentUser = await prisma.user.findUnique({
-      where: { userID },
-    });
-
-    if (!currentUser) {
-      return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
-    }
+    const userID = req.user.userID;
+    
 
     // 사용자 삭제 (연관된 데이터 Cascade로 삭제)
-    await prisma.user.delete({
-      where: { userID },
-    });
+    await prisma.$transaction(async (tx) => {
+      await tx.notification.deleteMany({
+        where: { userID: userID }
+      });
+      // 1️⃣ 친구 관계 삭제 (user가 포함된 모든 Friend 관계 삭제)
+      await tx.friend.deleteMany({
+          where: {
+              OR: [
+                  { userID: userID },
+                  { friendUserID: userID }
+              ]
+          }
+      });
+      await tx.friendFeed.deleteMany({
+        where: { userID: userID }
+      });
+
+      // 2️⃣ 모멘트 삭제 (해당 사용자가 생성한 모든 모멘트 삭제)
+      await tx.moment.deleteMany({
+          where: { userID: userID }
+      });
+
+      // 3️⃣ 버킷리스트 삭제 (해당 사용자가 생성한 모든 버킷 삭제)
+      await tx.bucket.deleteMany({
+          where: { userID: userID }
+      });
+
+      // 4️⃣ 사용자 삭제
+      await tx.user.delete({
+          where: { userID: userID }
+      });
+  });
+
 
     res.status(200).json({
       message: '회원 탈퇴가 성공적으로 완료되었습니다.',

@@ -252,6 +252,7 @@ export const knockFriend = async (req, res) => {
   const { friendUserID } = req.body; // 노크할 친구의 사용자 ID
 
   try {
+    
     // 친구 관계 및 최근 피드(모멘트) 정보 검색
     const friendRelation = await prisma.friend.findUnique({
       where: {
@@ -273,6 +274,11 @@ export const knockFriend = async (req, res) => {
       return res.status(404).json({ status: "failed", message: "해당 친구를 찾을 수 없습니다." });
     }
 
+    const friendBuckets = await prisma.bucket.findMany({
+      where: { userID: friendUserID }
+    });
+
+    
     // 친구가 최근 7일 이내에 피드(모멘트)를 올렸는지 확인  -> 내부 확인용
     const sevenDaysAgo = moment().subtract(7, 'days'); // 현재 날짜 기준 7일 전
 

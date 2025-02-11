@@ -56,7 +56,7 @@ export const getFriendFeed = async (req, res) => {
         bucketID: true,
         type: true,
         content: true,
-        //frequency: true,
+        frequency: true,
       },
     });
   
@@ -97,7 +97,7 @@ export const getFriendFeed = async (req, res) => {
       });      
 
        // ✅ 사용자가 해당 모멘트에 응원했는지 확인
-       for (const moment of bucketMoments) {
+      for (const moment of bucketMoments) {
         const friendFeed = await prisma.friendFeed.findFirst({
           where: {
             userID: friendID,  // 조회하는 사용자
@@ -115,7 +115,7 @@ export const getFriendFeed = async (req, res) => {
           imageUrl: moment.photoUrl,
           frequency: bucket.frequency,
           date: moment.updatedAt,
-          cheered: friendFeed ? friendFeed.cheer : false, // 사용자가 응원한 경우 true, 없으면 false
+          cheered: friendFeed?.cheer ?? false,
         });
       }
     }
