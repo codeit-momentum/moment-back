@@ -136,9 +136,9 @@ export const getCompletedMomentsByWeek = async (req, res) => {
         moment.startDate <= day && moment.endDate >= day
       );
 
-      // 모든 moment가 완료 상태인지 확인 (하나라도 false면 false 처리)
+      // 모든 moment가 완료 상태인지 확인 (하나라도 true면 true 처리)
       const isComplete =
-        momentsForDate.length > 0 && momentsForDate.every(m => m.isCompleted);
+        momentsForDate.length > 0 && momentsForDate.some(m => m.isCompleted);
 
       return {
         date: day.toISOString().split("T")[0], // 날짜를 YYYY-MM-DD 형식으로 반환
