@@ -277,12 +277,6 @@ export const knockFriend = async (req, res) => {
     const friendBuckets = await prisma.bucket.findMany({
       where: { userID: friendUserID }
     });
-    if (!friendBuckets || friendBuckets.length === 0) {
-      return res.status(404).json({
-        status: "failed",
-        message: "해당 친구에게 등록된 버킷이 없습니다."
-      });
-    }
 
     
     // 친구가 최근 7일 이내에 피드(모멘트)를 올렸는지 확인  -> 내부 확인용

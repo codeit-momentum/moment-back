@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
-import { generateAccessToken, generateRefreshToken } from './jwtControllers.js';
 import axios from 'axios';
+import { generateAccessToken, generateRefreshToken } from './jwtControllers.js';
 
 const prisma = new PrismaClient();
 
@@ -152,8 +152,10 @@ export const handleKakaoUser = async (req, res) => {
         // Refresh Token을 HttpOnly 쿠키에 저장
         res.cookie('refreshToken', refreshToken, { 
             httpOnly: true, 
-            secure: process.env.NODE_ENV === 'production', 
-            sameSite: 'none' 
+            secure: true,
+            sameSite: 'None',
+            domain: '.codeit-momentum.shop',
+            
         });
 
         // 사용자 정보 + JWT 토큰 반환
