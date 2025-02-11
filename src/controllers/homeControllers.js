@@ -127,6 +127,7 @@ export const getCompletedMomentsByWeek = async (req, res) => {
         startDate: true,
         endDate: true,
         isCompleted: true,
+        completedAt: true
       }
     });
 
@@ -135,16 +136,19 @@ export const getCompletedMomentsByWeek = async (req, res) => {
       const momentsForDate = moments.filter(moment =>
         moment.startDate <= day && moment.endDate >= day
       );
-
-      // 모든 moment가 완료 상태인지 확인 (하나라도 true면 true 처리)
-      const isComplete =
-        momentsForDate.length > 0 && momentsForDate.some(m => m.isCompleted);
-
+    
+      // isCompleted 변경이 해당 날짜에서 발생한 경우만 체크
+      const isComplete = 
+        momentsForDate.length > 0 && momentsForDate.some(m => 
+          m.isCompleted && m.completedAt && new Date(m.completedAt).toISOString().split("T")[0] === day.toISOString().split("T")[0]
+      );
+    
       return {
-        date: day.toISOString().split("T")[0], // 날짜를 YYYY-MM-DD 형식으로 반환
+        date: day.toISOString().split("T")[0], // 날짜 형식 변환
         isComplete: isComplete
       };
     });
+    
 
     return res.status(200).json({
       success: true,
