@@ -153,7 +153,7 @@ export const handleKakaoUser = async (req, res) => {
         res.cookie('refreshToken', refreshToken, { 
             httpOnly: true, 
             secure: process.env.NODE_ENV === 'production',
-            domain: '.codeit-momentum.shop',
+            domain: '.codeit-momentum.vercel.app',
             sameSite: 'none' 
         });
 
