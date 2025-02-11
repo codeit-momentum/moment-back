@@ -68,6 +68,7 @@ model Moment {
   photoUrl    String? // 인증사진
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  completedAt DateTime?
   startDate   DateTime?
   endDate     DateTime?
 

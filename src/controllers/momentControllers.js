@@ -261,6 +261,7 @@ export const updateMoment = async (req, res) => {
                 data: {
                     photoUrl: newPhotoUrl,
                     isCompleted: true,
+                    completedAt: new Date(),
                     updatedAt: new Date(),
                 },
             });
