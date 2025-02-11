@@ -152,9 +152,10 @@ export const handleKakaoUser = async (req, res) => {
         // Refresh Token을 HttpOnly 쿠키에 저장
         res.cookie('refreshToken', refreshToken, { 
             httpOnly: true, 
-            secure: process.env.NODE_ENV === 'production',
-            domain: '.codeit-momentum.vercel.app',
-            sameSite: 'none' 
+            secure: true,
+            sameSite: 'None',
+            domain: '.codeit-momentum.shop',
+            
         });
 
         // 사용자 정보 + JWT 토큰 반환
