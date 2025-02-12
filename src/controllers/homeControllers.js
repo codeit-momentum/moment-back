@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client';
+import moment from 'moment-timezone';
 
 const prisma = new PrismaClient();
+const koreaNow = moment().tz("Asia/Seoul").toDate();
 
 // 홈 당일 모멘트 조회
 export const getHome = async (req, res) => {
@@ -21,11 +23,11 @@ export const getHome = async (req, res) => {
       });
     };
     
-    const date = new Date(dateString); // 문자열 날짜 => Date 객체
-    if (isNaN(date.getTime())) {
+    const date = moment.tz(dateString, "Asia/Seoul").toDate();
+    if (!date || isNaN(date.getTime())) {
       return res.status(400).json({
         success: false,
-        error: { code: 400, message: "유효하지 않은 날짜 형식입니다." },
+        error: { code: 400, message: "유효하지 않은 날짜 형식입니다. YYYY-MM-DD 형식으로 입력해주세요." },
       });
     }
 
@@ -44,14 +46,7 @@ export const getHome = async (req, res) => {
     });
 
     // 당일 모먼트 완료 개수 
-    const completedCount = await prisma.moment.count({
-      where: {
-        userID,
-        startDate: { lte: date }, 
-        endDate: { gte: date },
-        isCompleted: true
-      }
-    });
+    const completedCount = moments.filter(m => m.isCompleted).length;
 
     return res.status(200).json({
       success: true,
@@ -76,6 +71,15 @@ export const getCompletedMomentsByWeek = async (req, res) => {
     const userID = req.user.userID; // 인증된 사용자 ID
     const dateString = req.params.date;  
 
+    // 날짜 검증
+    const date = moment.tz(dateString, "Asia/Seoul").toDate();
+    if (!date || isNaN(date.getTime())) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 400, message: "유효하지 않은 날짜 형식입니다. YYYY-MM-DD 형식으로 입력해주세요." }
+      });
+    }
+
     // 현재 사용자 조회
     const currentUser = await prisma.user.findUnique({
       where: { userID },
@@ -86,33 +90,27 @@ export const getCompletedMomentsByWeek = async (req, res) => {
         success: false,
         error: { code: 404, message: '현재 사용자를 찾을 수 없습니다.' }
       });
-    };
-    
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      return res.status(400).json({
-        success: false,
-        error: { code: 400, message: "날짜(date)는 필수 입력값입니다." }
-      });
     }
 
     // 해당 날짜가 포함된 주의 월요일 찾기
     const dayOfWeek = date.getDay(); // 요일을 0 (일요일)부터 6 (토요일)까지 반환
     const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // 월요일까지의 차이 계산
-    const startOfWeek = new Date(date);
+    const startOfWeek = date;
     startOfWeek.setDate(date.getDate() + diffToMonday); // 월요일로 설정
     
     // 일요일 계산
-    const endOfWeek = new Date(startOfWeek);
+    const endOfWeek = moment.tz(startOfWeek, "Asia/Seoul").toDate();
     endOfWeek.setDate(startOfWeek.getDate() + 6);
     
     // 월요일부터 일요일까지 날짜 배열 생성
     const weekDates = [];
     for (let i = 0; i < 7; i++) {
-        const weekDay = new Date(startOfWeek);
+        const weekDay = moment.tz(startOfWeek, "Asia/Seoul").toDate();
         weekDay.setDate(startOfWeek.getDate() + i);
         weekDates.push(weekDay); // "YYYY-MM-DD" 형식으로 변환하여 배열에 추가
     }
+
+    console.log("일주일 날짜 배열: ", weekDates);
 
     // 해당 주의 모든 moment 가져오기 (startDate와 endDate 범위로 필터링)
     const moments = await prisma.moment.findMany({
@@ -139,12 +137,15 @@ export const getCompletedMomentsByWeek = async (req, res) => {
     
       // isCompleted 변경이 해당 날짜에서 발생한 경우만 체크
       const isComplete = 
-        momentsForDate.length > 0 && momentsForDate.some(m => 
-          m.isCompleted && m.completedAt && new Date(m.completedAt).toISOString().split("T")[0] === day.toISOString().split("T")[0]
+        momentsForDate.length > 0 && 
+        momentsForDate.some(m => 
+          m.isCompleted && 
+          m.completedAt && 
+          moment.tz(m.completedAt, "Asia/Seoul").toDate().toISOString().split("T")[0] === day.toISOString().split("T")[0]
       );
     
       return {
-        date: day.toISOString().split("T")[0], // 날짜 형식 변환
+        date: moment(day).format("YYYY-MM-DD"), // 날짜 형식 변환
         isComplete: isComplete
       };
     });
@@ -185,7 +186,7 @@ export const getConsecutiveCompletedDays = async (req, res) => {
       });
     }
     
-    const targetDate = new Date(dateString);
+    const targetDate = moment.tz(dateString, "Asia/Seoul").toDate();
     if (isNaN(targetDate.getTime())) {
       return res.status(400).json({
         success: false,
@@ -195,7 +196,7 @@ export const getConsecutiveCompletedDays = async (req, res) => {
 
     // 연속된 isCompleted === true인 날짜 개수를 계산
     let consecutiveDays = 1;
-    let checkDate = new Date(targetDate);
+    let checkDate = moment.tz(targetDate, "Asia/Seoul").toDate();
     checkDate.setDate(checkDate.getDate() - 1); // 하루 전부터 검사 시작
 
     while (true) {
@@ -234,6 +235,7 @@ export const getConsecutiveCompletedDays = async (req, res) => {
   }
 };
 
+// 버킷 달성 확인 
 export const getCompletedBucket = async (req, res) => {
   try {
     const userID = req.user.userID; // JWT 인증 후 주입된 userID
@@ -243,7 +245,7 @@ export const getCompletedBucket = async (req, res) => {
         where: { userID },
     });
     
-        // 완료된 버킷 수
+    // 완료된 버킷 수
     const completedBucketsCount = await prisma.bucket.count({
         where: { userID, isCompleted: true },
     });
