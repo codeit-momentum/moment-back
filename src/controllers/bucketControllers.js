@@ -1,7 +1,9 @@
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { PrismaClient } from '@prisma/client';
+import momentTime from 'moment-timezone';
 import { s3Client } from '../config/s3config.js';
 
+const koreaNow = momentTime().tz("Asia/Seoul").toDate();
 const prisma = new PrismaClient();
 
 //버킷리스트 생성
@@ -22,6 +24,7 @@ export const createBucket = async (req, res) => {
             userID,
             type,
             content,
+            createdAt: koreaNow,
         },
         });
 
@@ -94,6 +97,7 @@ export const uploadAchievementPhoto = async (req, res) => {
         data: {
             photoUrl: photoUrl,
             isCompleted: true,  // 달성 완료
+            updatedAt: koreaNow,
         },
         });
 
@@ -155,7 +159,7 @@ export const activateBucketChallenge = async (req, res) => {
 
         const updated = await prisma.bucket.update({
             where: { bucketID },
-            data: { isChallenging: true },
+            data: { isChallenging: true, updatedAt: koreaNow },
         });
 
         const newCount = await prisma.bucket.count({
@@ -266,7 +270,7 @@ export const getBucketDetail = async (req, res) => {
             if (completedMomentsCount === momentsCount && !bucket.isCompleted && momentsCount !== 0) {
                 await tx.bucket.update({
                     where: { bucketID },
-                    data: { isCompleted: true, updatedAt: new Date() },
+                    data: { isCompleted: true, updatedAt: koreaNow },
                 });
             }
 
@@ -324,7 +328,7 @@ export const updateBucket = async (req, res) => {
             where: { bucketID },
             data: {
             ...updateData,
-            updatedAt: new Date(),
+            updatedAt: koreaNow,
             },
         });
 

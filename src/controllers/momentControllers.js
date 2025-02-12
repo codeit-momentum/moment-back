@@ -1,7 +1,9 @@
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { PrismaClient } from '@prisma/client';
+import momentTime from 'moment-timezone';
 import { s3Client } from '../config/s3config.js';
 
+const koreaNow = momentTime().tz("Asia/Seoul").toDate();
 const prisma = new PrismaClient();
 
 // 모멘트 생성 API (예외처리 완료)
@@ -91,6 +93,7 @@ export const createMoments = async (req, res) => {
                     endDate: mEnd,
                     bucketID: bucketID,
                     userID: userID,
+                    createdAt: koreaNow,
                 },
             });
             createdMoments.push(momentCreated);
@@ -102,7 +105,7 @@ export const createMoments = async (req, res) => {
                 data: {
                     startDate: startDate ? new Date(startDate) : bucket.startDate,
                     endDate: endDate ? new Date(endDate) : bucket.endDate,
-                    updatedAt: new Date(),
+                    updatedAt: koreaNow,
                     frequency,
                 },
             });
@@ -261,8 +264,8 @@ export const updateMoment = async (req, res) => {
                 data: {
                     photoUrl: newPhotoUrl,
                     isCompleted: true,
-                    completedAt: new Date(),
-                    updatedAt: new Date(),
+                    completedAt: koreaNow,
+                    updatedAt: koreaNow,
                 },
             });
         
@@ -285,7 +288,7 @@ export const updateMoment = async (req, res) => {
             if (totalMoments > 0 && totalMoments === completedMoments) {
                 updatedBucket = await tx.bucket.update({
                     where: { bucketID },
-                    data: { isCompleted: true, isChallenging: false, updatedAt: new Date() },
+                    data: { isCompleted: true, isChallenging: false, updatedAt: koreaNow },
                 });
             }
     
@@ -350,14 +353,12 @@ export const getDetailMoment = async (req, res) => {
 export const getChallengingBucketsAndMoments = async (req, res) => {
     try {
         const userID = req.user.userID;
-        const now = new Date(); // 현재 시각
-
         // 0) 만료된 버킷 처리 (버킷 ID 찾기)
         const expiredBuckets = await prisma.bucket.findMany({
             where: {
                 userID,
                 isChallenging: true,
-                endDate: { not: null, lt: now },
+                endDate: { not: null, lt: koreaNow },
             },
             select: { bucketID: true },
         });
@@ -379,6 +380,7 @@ export const getChallengingBucketsAndMoments = async (req, res) => {
                 },
                 data: {
                     isChallenging: false,
+                    updatedAt: koreaNow,
                 },
             });
         }
@@ -409,7 +411,7 @@ export const getChallengingBucketsAndMoments = async (req, res) => {
                 const start = new Date(m.startDate);
                 const end = new Date(m.endDate);
         
-                return start <= now && now <= end;
+                return start <= koreaNow && koreaNow <= end;
             });
     
             // (c) 응답용 모멘트 필드만 추출

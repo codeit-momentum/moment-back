@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client'; // Prisma 클라이언트
 import { subDays } from "date-fns";
+import momentTime from 'moment-timezone';
 
+const koreaNow = momentTime().tz("Asia/Seoul").toDate();
 const prisma = new PrismaClient(); 
 
 export const getFriendFeed = async (req, res) => {
@@ -73,7 +75,7 @@ export const getFriendFeed = async (req, res) => {
     }
 
     // 4. 반복형 버킷리스트의 완료된 모멘트 가져오기
-    const sevenDaysAgo = subDays(new Date(), 7); // 7일 전 계산
+    const sevenDaysAgo = subDays(koreaNow, 7); // 7일 전 계산
     const moments = [];
 
     for (const bucket of repeatBuckets) {
