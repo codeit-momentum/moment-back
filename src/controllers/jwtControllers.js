@@ -23,13 +23,15 @@ export const generateRefreshToken = (user) => {
 // JWT 액세스 토큰 갱신
 export const refreshAccessToken = async (req) => {
   const refreshToken = req.cookies.refreshToken;
-  console.log("리프래시 토큰:", refreshToken);
+  console.log("받은 리프래시 토큰:", refreshToken); // 리프래시 토큰 확인
   if (!refreshToken) {
     throw new Error('Refresh Token이 필요합니다.');
   }
 
   try {
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    console.log("디코딩된 리프래시 토큰 정보:", decoded); // 디코딩 정보 확인
+    
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
     });
@@ -40,9 +42,10 @@ export const refreshAccessToken = async (req) => {
 
     // 새로운 Access Token 발급
     const newAccessToken = generateAccessToken(user);
-    console.log("새로운 액세스 토큰:", newAccessToken);
+    console.log("새로운 액세스 토큰:", newAccessToken); // 새로운 토큰 확인
     return newAccessToken;
   } catch (err) {
+    console.log("리프래시 토큰 검증 실패:", err);
     throw new Error('유효하지 않은 Refresh Token입니다.');
   }
 };
