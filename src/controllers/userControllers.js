@@ -196,8 +196,6 @@ export const updateProfile = async (req, res) => {
 
 // 사용자 회원탈퇴
 export const deleteUser = async (req, res) => {
-  const userID = req.user.userID; // 요청한 사용자의 userID 가져오기
-
   try {
     // 현재 요청한 사용자 조회
     const userID = req.user.userID;

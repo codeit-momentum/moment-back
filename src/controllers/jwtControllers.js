@@ -23,7 +23,7 @@ export const generateRefreshToken = (user) => {
 // JWT 액세스 토큰 갱신
 export const refreshAccessToken = async (req) => {
   const refreshToken = req.cookies.refreshToken;
-  console.log(refreshToken);
+  console.log("리프래시 토큰:", refreshToken);
   if (!refreshToken) {
     throw new Error('Refresh Token이 필요합니다.');
   }
@@ -40,6 +40,7 @@ export const refreshAccessToken = async (req) => {
 
     // 새로운 Access Token 발급
     const newAccessToken = generateAccessToken(user);
+    console.log("새로운 액세스 토큰:", newAccessToken);
     return newAccessToken;
   } catch (err) {
     throw new Error('유효하지 않은 Refresh Token입니다.');
