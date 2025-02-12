@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import moment from 'moment';
 import cron from 'node-cron';
 
+const koreaNow = moment().tz("Asia/Seoul").toDate();
 const prisma = new PrismaClient();
 
 
@@ -305,7 +306,7 @@ export const knockFriend = async (req, res) => {
         id: friendRelation.id
       },
       data: {
-        knockedAt: now,
+        knockedAt: koreaNow,
         isKnock: true
       }
     });
@@ -437,7 +438,7 @@ export const toggleFriendFix = async (req, res) => {
       },
       data: {
         isFixed: !friendRelation.isFixed,
-        fixedAt: !friendRelation.isFixed ? new Date() : null, // 고정 시 현재 시각, 해제 시 null
+        fixedAt: !friendRelation.isFixed ? koreaNow : null, // 고정 시 현재 시각, 해제 시 null
       },
     });
 
