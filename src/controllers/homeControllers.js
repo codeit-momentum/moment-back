@@ -21,7 +21,7 @@ export const getHome = async (req, res) => {
       });
     };
     
-    const date = moment().tz("Asia/Seoul").toDate();
+    const date = moment().tz("Asia/Seoul");
 
     // 사용자의 moments 조회 
     const moments = await prisma.moment.findMany({
@@ -32,7 +32,9 @@ export const getHome = async (req, res) => {
       },
       select: {
         momentID: true,
-        content: true, 
+        content: true,
+        startDate:true,
+        endDate: true, 
         isCompleted: true
       }
     });
@@ -137,12 +139,13 @@ export const getConsecutiveCompletedDays = async (req, res) => {
       });
     }
     
-    const targetDate = moment().tz("Asia/Seoul").toDate();
+    const targetDate = moment().tz("Asia/Seoul");
 
     // 연속된 isCompleted === true인 날짜 개수를 계산
     let consecutiveDays = 1;
-    let checkDate = moment.tz(targetDate, "Asia/Seoul").toDate();
-    checkDate.setDate(checkDate.getDate() - 1); // 하루 전부터 검사 시작
+    let checkDate = moment(targetDate).subtract(1, "days"); // 하루 전부터 검사 시작
+    console.log(targetDate);
+    console.log(checkDate);
 
     while (true) {
       const moments = await prisma.moment.findMany({
@@ -155,12 +158,12 @@ export const getConsecutiveCompletedDays = async (req, res) => {
           isCompleted: true,
         }
       });
-
+      console.log(moments);
       const isComplete = moments.length > 0 && moments.some(m => m.isCompleted);
 
       if (isComplete) {
         consecutiveDays++;
-        checkDate.setDate(checkDate.getDate() - 1);
+        checkDate = moment(checkDate).subtract(1, "days");
       } else {
         break;
       }
