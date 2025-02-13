@@ -108,7 +108,7 @@ export const getFriendFeed = async (req, res) => {
       for (const moment of bucketMoments) {
         const friendFeed = await prisma.friendFeed.findFirst({
           where: {
-            userID: friendID,  // 조회하는 사용자
+            userID: userID,  // 조회하는 사용자
             momentID: moment.momentID, // 친구의 모멘트
           },
           select: {
