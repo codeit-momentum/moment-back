@@ -3,11 +3,18 @@ import { PrismaClient } from '@prisma/client';
 import momentTime from 'moment-timezone';
 import { s3Client } from '../config/s3config.js';
 
-const koreaNow = momentTime().tz("Asia/Seoul").toDate();
+const getKoreaNow = () => {
+    const now = new Date(); // 현재 UTC 기준 시간
+    now.setHours(now.getHours() + 9); // 9시간 추가 (UTC → KST 변환)
+    return now;
+};
+
+const koreaNow = getKoreaNow();
+// const koreaNow = momentTime().tz("Asia/Seoul").toDate();
 const prisma = new PrismaClient();
 
 // 모멘트 생성 API (예외처리 완료)
-export const createMoments = async (req, res) => {
+export const createMoments = async (req, res) => {n
     try {
         const userID = req.user.userID;
         const { bucketID } = req.params;
@@ -61,9 +68,9 @@ export const createMoments = async (req, res) => {
             return d;
         };
 
-          // 버킷의 startDate, endDate 변환
-          let bucketStart = bucket.startDate; // 기존 값
-          let bucketEnd = bucket.endDate;     // 기존 값
+        // 버킷의 startDate, endDate 변환
+        let bucketStart = bucket.startDate; // 기존 값
+        let bucketEnd = bucket.endDate;     // 기존 값
 
         if (startDate) {
             bucketStart = toStartOfDay(startDate);

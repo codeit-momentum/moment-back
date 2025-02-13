@@ -2,7 +2,14 @@ import { PrismaClient } from '@prisma/client'; // Prisma 클라이언트
 import { subDays } from "date-fns";
 import momentTime from 'moment-timezone';
 
-const koreaNow = momentTime().tz("Asia/Seoul").toDate();
+const getKoreaNow = () => {
+  const now = new Date(); // 현재 UTC 기준 시간
+  now.setHours(now.getHours() + 9); // 9시간 추가 (UTC → KST 변환)
+  return now;
+};
+
+const koreaNow = getKoreaNow();
+// const koreaNow = momentTime().tz("Asia/Seoul").toDate();
 const prisma = new PrismaClient(); 
 
 export const getFriendFeed = async (req, res) => {

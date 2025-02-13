@@ -3,7 +3,14 @@ import { PrismaClient } from '@prisma/client';
 import momentTime from 'moment-timezone';
 import { s3Client } from '../config/s3config.js';
 
-const koreaNow = momentTime().tz("Asia/Seoul").toDate();
+const getKoreaNow = () => {
+    const now = new Date(); // 현재 UTC 기준 시간
+    now.setHours(now.getHours() + 9); // 9시간 추가 (UTC → KST 변환)
+    return now;
+};
+
+const koreaNow = getKoreaNow();
+// const koreaNow = momentTime().tz("Asia/Seoul").toDate();
 const prisma = new PrismaClient();
 
 //버킷리스트 생성
