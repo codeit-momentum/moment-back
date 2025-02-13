@@ -8,8 +8,6 @@ const getKoreaNow = () => {
     return now;
 };
 
-const koreaNow = getKoreaNow();
-// const koreaNow = momentTime().tz("Asia/Seoul").toDate();
 const prisma = new PrismaClient();
 
 // 모멘트 생성 API (예외처리 완료)
@@ -18,6 +16,7 @@ export const createMoments = async (req, res) => {
         const userID = req.user.userID;
         const { bucketID } = req.params;
         const { startDate, endDate, moments, frequency } = req.body;
+        const koreaNow = getKoreaNow();
 
         // 1) 요청 검증
         if (!Array.isArray(moments) || moments.length === 0) {
@@ -62,8 +61,8 @@ export const createMoments = async (req, res) => {
         };
         const toEndOfDay = (dateStr) => {
             const d = new Date(`${dateStr}T00:00:00`); 
-            // 날짜를 23:59:59.999로
-            d.setHours(23, 59, 59, 999);
+            d.setDate(d.getDate() - 1); // 하루 전으로 조정
+            d.setHours(23, 59, 59, 999); // 날짜를 23:59:59.999로
             return d;
         };
 
@@ -210,6 +209,8 @@ export const updateMoment = async (req, res) => {
     try {
         const userID = req.user.userID;
         const { momentID } = req.params;
+        const koreaNow = getKoreaNow();
+        
         // 모멘트+버킷 조회
         const existingMoment = await prisma.moment.findUnique({
             where: { momentID },
@@ -359,6 +360,7 @@ export const getDetailMoment = async (req, res) => {
 export const getChallengingBucketsAndMoments = async (req, res) => {
     try {
         const userID = req.user.userID;
+        const koreaNow = getKoreaNow();
         // 0) 만료된 버킷 처리 (버킷 ID 찾기)
         const expiredBuckets = await prisma.bucket.findMany({
             where: {
@@ -455,7 +457,8 @@ export const getChallengingBucketsAndMoments = async (req, res) => {
 
 export const getChallengingBucketCount = async (req, res) => {
     try {
-      const userID = req.user.userID; // JWT 인증 후, userID 획득
+        const userID = req.user.userID; // JWT 인증 후, userID 획득
+      
         // 1) 현재 유저의 도전 중 버킷 갯수
         const challengingCount = await prisma.bucket.count({
             where: {
@@ -468,7 +471,7 @@ export const getChallengingBucketCount = async (req, res) => {
             success: true,
             challengingCount, // 도전 중 버킷 갯수
         });
-        } catch (error) {
+    } catch (error) {
         console.error('도전 중 버킷 개수 조회 실패:', error);
         return res.status(500).json({
             success: false,

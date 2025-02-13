@@ -1,6 +1,5 @@
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { PrismaClient } from '@prisma/client';
-import momentTime from 'moment-timezone';
 import { s3Client } from '../config/s3config.js';
 
 const getKoreaNow = () => {
@@ -9,8 +8,6 @@ const getKoreaNow = () => {
     return now;
 };
 
-const koreaNow = getKoreaNow();
-// const koreaNow = momentTime().tz("Asia/Seoul").toDate();
 const prisma = new PrismaClient();
 
 //버킷리스트 생성
@@ -18,6 +15,7 @@ export const createBucket = async (req, res) => {
     try {
         const userID = req.user.userID;
         const { type, content } = req.body;
+        const koreaNow = getKoreaNow();
 
         if (!type || !content) {
         return res.status(400).json({
@@ -58,6 +56,7 @@ export const uploadAchievementPhoto = async (req, res) => {
     try {
         const userID = req.user.userID;
         const { bucketID } = req.params;
+        const koreaNow = getKoreaNow();
 
         const bucket = await prisma.bucket.findUnique({ where: { bucketID } });
         if (!bucket) {
@@ -132,6 +131,7 @@ export const activateBucketChallenge = async (req, res) => {
     try {
         const userID = req.user.userID;
         const { bucketID } = req.params;
+        const koreaNow = getKoreaNow();
 
         const bucket = await prisma.bucket.findUnique({ where: { bucketID } });
         if (!bucket) {
@@ -198,6 +198,7 @@ export const deactivateBucketChallenge = async (req, res) => {
     try {
         const userID = req.user.userID;
         const { bucketID } = req.params;
+        const koreaNow = getKoreaNow();
 
         const bucket = await prisma.bucket.findUnique({ where: { bucketID } });
         if (!bucket) {
@@ -221,7 +222,7 @@ export const deactivateBucketChallenge = async (req, res) => {
 
         const updated = await prisma.bucket.update({
             where: { bucketID },
-            data: { isChallenging: false },
+            data: { isChallenging: false, updatedAt: koreaNow },
         });
 
         const newCount = await prisma.bucket.count({
@@ -253,6 +254,7 @@ export const getBucketDetail = async (req, res) => {
     try {
         const userID = req.user.userID;
         const { bucketID } = req.params;
+        const koreaNow = getKoreaNow();
 
         const result = await prisma.$transaction(async (tx) => {
             // 버킷 + 모멘트 가져오기
@@ -304,6 +306,7 @@ export const updateBucket = async (req, res) => {
         const userID = req.user.userID; // JWT 인증 후 주입된 값
         const { bucketID } = req.params;
         const { content } = req.body;
+        const koreaNow = getKoreaNow();
 
       // 1) 현재 버킷 조회
         const existingBucket = await prisma.bucket.findUnique({

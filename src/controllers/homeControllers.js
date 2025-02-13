@@ -1,6 +1,12 @@
 import { PrismaClient } from '@prisma/client';
 import moment from 'moment-timezone';
 
+const getKoreaNow = () => {
+  const now = new Date(); // 현재 UTC 기준 시간
+  now.setHours(now.getHours() + 9); // 9시간 추가 (UTC → KST 변환)
+  return now;
+};
+
 const prisma = new PrismaClient();
 
 // 홈 당일 모멘트 조회
@@ -8,6 +14,8 @@ export const getHome = async (req, res) => {
   try {
     // 현재 인증된 사용자 정보 가져오기
     const userID = req.user.userID; // 현재 사용자 ID
+    const koreaNow = getKoreaNow();
+    console.log(koreaNow);
 
     // 현재 사용자 조회
     const currentUser = await prisma.user.findUnique({
@@ -21,19 +29,17 @@ export const getHome = async (req, res) => {
       });
     };
     
-    const date = moment().tz("Asia/Seoul");
-
     // 사용자의 moments 조회 
     const moments = await prisma.moment.findMany({
       where: {
         userID,
-        startDate: { lte: date }, 
-        endDate: { gte: date }      
+        startDate: { lte: koreaNow }, 
+        endDate: { gte: koreaNow }      
       },
       select: {
         momentID: true,
         content: true,
-        startDate:true,
+        startDate: true,
         endDate: true, 
         isCompleted: true
       }
@@ -63,13 +69,15 @@ export const getHome = async (req, res) => {
 export const getCompletedMomentsByWeek = async (req, res) => {
   try {
     const userID = req.user.userID;
-    const now = moment().tz("Asia/Seoul"); 
-    const startOfWeek = now.clone().startOf('isoWeek'); 
-  
+    const koreaNow = getKoreaNow();
+    const koreaNowMoment = moment(koreaNow);
+
+    const startOfWeek = koreaNowMoment.startOf('isoWeek');   
     const weekDates = [];
     for (let i = 0; i < 7; i++) {
-      weekDates.push(startOfWeek.clone().add(i, 'days').toDate());
+      weekDates.push(moment(startOfWeek).add(i, 'days').toDate());
     }
+    console.log(weekDates);
 
     const moments = await prisma.moment.findMany({
       where: {
@@ -126,6 +134,7 @@ export const getCompletedMomentsByWeek = async (req, res) => {
 export const getConsecutiveCompletedDays = async (req, res) => {
   try {
     const userID = req.user.userID; // 인증된 사용자 ID    
+    const koreaNow = getKoreaNow();
 
     // 현재 사용자 조회
     const currentUser = await prisma.user.findUnique({
@@ -139,14 +148,10 @@ export const getConsecutiveCompletedDays = async (req, res) => {
       });
     }
     
-    const targetDate = moment().tz("Asia/Seoul");
-
     // 연속된 isCompleted === true인 날짜 개수를 계산
     let consecutiveDays = 1;
-    let checkDate = moment(targetDate).subtract(1, "days"); // 하루 전부터 검사 시작
-    console.log(targetDate);
-    console.log(checkDate);
-
+    let checkDate = koreaNow;
+    checkDate.setDate(checkDate.getDate() - 1); // 하루 전부터 검사 시작
     while (true) {
       const moments = await prisma.moment.findMany({
         where: {
@@ -155,15 +160,22 @@ export const getConsecutiveCompletedDays = async (req, res) => {
           endDate: { gte: checkDate }
         },
         select: {
+          completedAt: true,
           isCompleted: true,
         }
       });
-      console.log(moments);
-      const isComplete = moments.length > 0 && moments.some(m => m.isCompleted);
+
+      const isComplete = 
+        moments.length > 0 &&
+        moments.some(m => 
+          m.isCompleted &&
+          moment.tz(m.completedAt, "Asia/Seoul").tz(moment.tz.guess()).format("YYYY-MM-DD") === 
+          moment.tz(checkDate, "Asia/Seoul").tz(moment.tz.guess()).format("YYYY-MM-DD")
+        );
 
       if (isComplete) {
         consecutiveDays++;
-        checkDate = moment(checkDate).subtract(1, "days");
+        checkDate.setDate(checkDate.getDate() - 1);
       } else {
         break;
       }

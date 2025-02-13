@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client'; // Prisma 클라이언트
 import { subDays } from "date-fns";
-import momentTime from 'moment-timezone';
 
 const getKoreaNow = () => {
   const now = new Date(); // 현재 UTC 기준 시간
@@ -8,15 +7,14 @@ const getKoreaNow = () => {
   return now;
 };
 
-const koreaNow = getKoreaNow();
-// const koreaNow = momentTime().tz("Asia/Seoul").toDate();
 const prisma = new PrismaClient(); 
 
 export const getFriendFeed = async (req, res) => {
   try {
     const userID = req.user.userID;
     const friendID = req.params.friendID; // 요청 URL에서 친구 ID 가져오기
-
+    const koreaNow = getKoreaNow();
+    
     // 1. 친구 관계 확인
     const friendRelation = await prisma.friend.findMany({
       where: {
@@ -90,7 +88,7 @@ export const getFriendFeed = async (req, res) => {
         where: {
           bucketID: bucket.bucketID,
           isCompleted: true,
-          updatedAt: {
+          completedAt: {
             gte: sevenDaysAgo, // 7일 이내만 조회
           },
         },
@@ -98,10 +96,10 @@ export const getFriendFeed = async (req, res) => {
           momentID: true,
           content: true,
           photoUrl: true,
-          updatedAt: true,
+          completedAt: true,
         },
         orderBy: {
-          updatedAt: "desc",
+          completedAt: "desc",
         },
       });      
 
@@ -109,7 +107,7 @@ export const getFriendFeed = async (req, res) => {
       for (const moment of bucketMoments) {
         const friendFeed = await prisma.friendFeed.findFirst({
           where: {
-            userID: friendID,  // 조회하는 사용자
+            userID: userID,  // 조회하는 사용자
             momentID: moment.momentID, // 친구의 모멘트
           },
           select: {
@@ -123,8 +121,8 @@ export const getFriendFeed = async (req, res) => {
           momentContent: moment.content,
           imageUrl: moment.photoUrl,
           frequency: bucket.frequency,
-          date: moment.updatedAt,
-          cheered: friendFeed?.cheer ?? false,
+          date: moment.completedAt,
+          cheered: friendFeed ? friendFeed.cheer : false, 
         });
       }
     }

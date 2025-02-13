@@ -4,6 +4,11 @@ import { generateAccessToken, generateRefreshToken } from './jwtControllers.js';
 
 const prisma = new PrismaClient();
 
+const getKoreaNow = () => {
+    const now = new Date(); // 현재 UTC 기준 시간
+    now.setHours(now.getHours() + 9); // 9시간 추가 (UTC → KST 변환)
+    return now;
+};
 
 // 카카오 로그인 페이지로 리디렉션 (프론트에서 하는 작업) (테스트용)
 export const redirectToKakaoLogin = (req, res) => {
@@ -105,12 +110,14 @@ export const handleKakaoUser = async (req, res) => {
     const { kakaoAccessToken } = req.body; // 클라이언트에서 받은 액세스 토큰
 
     try {
-        // 카카오 사용자 정보 가져오기기
+        // 카카오 사용자 정보 가져오기
         const userInfo = await getKakaoUser(kakaoAccessToken);
 
         const { id: userID, kakao_account } = userInfo; // 카카오 사용자 ID 및 계정 정보
         const email = kakao_account.email;
 
+        const koreaNow = getKoreaNow();
+        
         // 데이터베이스에서 사용자 확인 또는 새 사용자 생성
         let user = await prisma.user.findUnique({ where: { email } });
         
@@ -141,6 +148,8 @@ export const handleKakaoUser = async (req, res) => {
                     nickname, // 생성된 닉네임
                     friendCode, // 친구 코드
                     profileImageUrl: defaultProfileImageUrl, // 기본 프로필 이미지
+                    createdAt: koreaNow,
+                    updatedAt: koreaNow
                 },
             });
         }
