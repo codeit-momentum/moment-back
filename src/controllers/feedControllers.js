@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client'; // Prisma 클라이언트
 import { subDays } from "date-fns";
-import momentTime from 'moment-timezone';
 
 const getKoreaNow = () => {
   const now = new Date(); // 현재 UTC 기준 시간
@@ -124,7 +123,7 @@ export const getFriendFeed = async (req, res) => {
           imageUrl: moment.photoUrl,
           frequency: bucket.frequency,
           date: moment.updatedAt,
-          cheered: friendFeed?.cheer ?? false,
+          cheer: friendFeed.cheer ?? false,
         });
       }
     }
