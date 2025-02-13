@@ -15,7 +15,6 @@ export const getHome = async (req, res) => {
     // 현재 인증된 사용자 정보 가져오기
     const userID = req.user.userID; // 현재 사용자 ID
     const koreaNow = getKoreaNow();
-    console.log(koreaNow);
 
     // 현재 사용자 조회
     const currentUser = await prisma.user.findUnique({
