@@ -67,11 +67,12 @@ export const getCompletedMomentsByWeek = async (req, res) => {
   try {
     const userID = req.user.userID;
     const koreaNow = getKoreaNow();
-    const startOfWeek = koreaNow.clone().startOf('isoWeek'); 
-  
+    const koreaNowMoment = moment(getKoreaNow());
+
+    const startOfWeek = koreaNowMoment.startOf('isoWeek');   
     const weekDates = [];
     for (let i = 0; i < 7; i++) {
-      weekDates.push(startOfWeek.clone().add(i, 'days').toDate());
+      weekDates.push(moment(startOfWeek).add(i, 'days').toDate());
     }
 
     const moments = await prisma.moment.findMany({
