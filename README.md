@@ -33,7 +33,7 @@
 - **주요 특징:**
   - 목표를 세분화하여 작은 단위로 설정 가능 (인공지능이 자동으로 or 사용자가 수동으로)
   - 1일에 1번, 2일에 1번, 1주에 1번, 1달에 1번의 총 4개의 단위로 나누고 사용자가 희망하는 만큼 반복 설정 가능
-\n
+
 
 ### 2️⃣ 피드 공유 기능 🏙️
 
@@ -41,7 +41,7 @@
 - **주요 특징:**
   - 목표 달성 후 기록 작성 가능 (사진 포함)
   - 친구와 성과를 공유하고 타임라인으로 확인 가능 (단, 1주일마다 리셋)
-\n
+
 
 ### 3️⃣ 친구 추가 및 관리 기능 👥
 
@@ -49,7 +49,7 @@
 - **주요 특징:**
   - 랜덤으로 부여되는 친구 코드를 통해 친구 추가 가능
   - 친구 추가 및 삭제 기능 제공
-\n  
+ 
 
 ### 4️⃣ 버킷리스트 작성 기능 📜
 
@@ -60,7 +60,7 @@
   - 달성형: 한 번의 달성으로 끝나는 목표 (예: 자격증 취득)
   - 버킷리스트 생성, 수정, 삭제 가능
   - 반복형은 바로 달성 인증 불가, 달성형은 바로 인증 가능
-\n
+
 
 ---
 
@@ -81,8 +81,8 @@
 
 ## 🌐 배포 및 데모 (Deployment & Demo)
 
-- **전체 배포 주소**: [https://codeit-momentum.vecel.app](https://codeit-momentum.vecel.app)
-- **BackEnd 배포 주소**: [https://codeit-momentum.shop](https://codeit-momentum.shop)
+- **전체 배포 주소**: [https://codeit-momentum.shop](https://codeit-momentum.shop)
+- **BackEnd 배포 주소**: [https://api.codeit-momentum.shop](https://api.codeit-momentum.shop)
 - **데모 영상**: 
 
 ---
