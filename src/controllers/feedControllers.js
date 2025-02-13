@@ -123,7 +123,7 @@ export const getFriendFeed = async (req, res) => {
           imageUrl: moment.photoUrl,
           frequency: bucket.frequency,
           date: moment.updatedAt,
-          cheer: friendFeed.cheer ?? false,
+          cheered: friendFeed.cheer ?? false,
         });
       }
     }
