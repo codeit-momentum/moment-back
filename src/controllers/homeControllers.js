@@ -37,7 +37,9 @@ export const getHome = async (req, res) => {
       },
       select: {
         momentID: true,
-        content: true, 
+        content: true,
+        startDate: true,
+        endDate: true, 
         isCompleted: true
       }
     });
@@ -67,13 +69,14 @@ export const getCompletedMomentsByWeek = async (req, res) => {
   try {
     const userID = req.user.userID;
     const koreaNow = getKoreaNow();
-    const koreaNowMoment = moment(getKoreaNow());
+    const koreaNowMoment = moment(koreaNow);
 
     const startOfWeek = koreaNowMoment.startOf('isoWeek');   
     const weekDates = [];
     for (let i = 0; i < 7; i++) {
       weekDates.push(moment(startOfWeek).add(i, 'days').toDate());
     }
+    console.log(weekDates);
 
     const moments = await prisma.moment.findMany({
       where: {
@@ -146,9 +149,8 @@ export const getConsecutiveCompletedDays = async (req, res) => {
     
     // 연속된 isCompleted === true인 날짜 개수를 계산
     let consecutiveDays = 1;
-    let checkDate = moment.tz(koreaNow, "Asia/Seoul").toDate();
+    let checkDate = koreaNow;
     checkDate.setDate(checkDate.getDate() - 1); // 하루 전부터 검사 시작
-
     while (true) {
       const moments = await prisma.moment.findMany({
         where: {
@@ -157,11 +159,18 @@ export const getConsecutiveCompletedDays = async (req, res) => {
           endDate: { gte: checkDate }
         },
         select: {
+          completedAt: true,
           isCompleted: true,
         }
       });
 
-      const isComplete = moments.length > 0 && moments.some(m => m.isCompleted);
+      const isComplete = 
+        moments.length > 0 &&
+        moments.some(m => 
+          m.isCompleted &&
+          moment.tz(m.completedAt, "Asia/Seoul").tz(moment.tz.guess()).format("YYYY-MM-DD") === 
+          moment.tz(checkDate, "Asia/Seoul").tz(moment.tz.guess()).format("YYYY-MM-DD")
+        );
 
       if (isComplete) {
         consecutiveDays++;
