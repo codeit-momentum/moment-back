@@ -61,8 +61,8 @@ export const createMoments = async (req, res) => {
         };
         const toEndOfDay = (dateStr) => {
             const d = new Date(`${dateStr}T00:00:00`); 
-            // 날짜를 23:59:59.999로
-            d.setHours(23, 59, 59, 999);
+            d.setDate(d.getDate() - 1); // 하루 전으로 조정
+            d.setHours(23, 59, 59, 999); // 날짜를 23:59:59.999로
             return d;
         };
 
