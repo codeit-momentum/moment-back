@@ -7,15 +7,14 @@ const getKoreaNow = () => {
   return now;
 };
 
-const koreaNow = getKoreaNow();
-// const koreaNow = momentTime().tz("Asia/Seoul").toDate();
 const prisma = new PrismaClient(); 
 
 export const getFriendFeed = async (req, res) => {
   try {
     const userID = req.user.userID;
     const friendID = req.params.friendID; // 요청 URL에서 친구 ID 가져오기
-
+    const koreaNow = getKoreaNow();
+    
     // 1. 친구 관계 확인
     const friendRelation = await prisma.friend.findMany({
       where: {
