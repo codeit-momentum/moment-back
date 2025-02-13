@@ -1,6 +1,5 @@
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { PrismaClient } from '@prisma/client';
-import momentTime from 'moment-timezone';
 import { s3Client } from '../config/s3config.js';
 
 const getKoreaNow = () => {
@@ -14,7 +13,7 @@ const koreaNow = getKoreaNow();
 const prisma = new PrismaClient();
 
 // 모멘트 생성 API (예외처리 완료)
-export const createMoments = async (req, res) => {n
+export const createMoments = async (req, res) => {
     try {
         const userID = req.user.userID;
         const { bucketID } = req.params;
