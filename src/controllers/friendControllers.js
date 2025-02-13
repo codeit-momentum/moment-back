@@ -8,15 +8,12 @@ const getKoreaNow = () => {
   return now;
 };
 
-const koreaNow = getKoreaNow();
-// const koreaNow = moment().tz("Asia/Seoul").toDate();
 const prisma = new PrismaClient();
 
 
 // 사용자 친구 목록 조회
 export const getFriends = async (req, res) => {
   const userID = req.user.userID;
-
   try {
     // 친구 목록 조회
     const friends = await prisma.friend.findMany({
@@ -98,6 +95,7 @@ export const checkFriendCode = async (req, res) => {
 export const addFriend = async (req, res) => {
   const { friendCode } = req.body;
   const requesterID = req.user.userID; // 현재 요청을 보낸 사용자 ID
+  const koreaNow = getKoreaNow();
 
   // 친구코드가 없는 경우 에러 반환
   if (!friendCode) {
@@ -142,10 +140,12 @@ export const addFriend = async (req, res) => {
         {
           userID: requesterID,
           friendUserID: receiverID,
+          createdAt: koreaNow,
         },
         {
           userID: receiverID,
           friendUserID: requesterID,
+          createdAt: koreaNow,
         },
       ],
     });
@@ -168,11 +168,13 @@ export const addFriend = async (req, res) => {
           userID: requesterID,
           type: 'FRIEND',
           content: `${friend.nickname}님과 친구가 되었어요!`,
+          createdAt: koreaNow,
         },
         {
           userID: receiverID,
           type: 'FRIEND',
           content: `${user.nickname}님과 친구가 되었어요!`,
+          createdAt: koreaNow,
         },
       ]
     });
@@ -258,6 +260,7 @@ cron.schedule('0 0 * * 1', async () => {
 export const knockFriend = async (req, res) => {
   const userID = req.user.userID; // 현재 사용자 ID
   const { friendUserID } = req.body; // 노크할 친구의 사용자 ID
+  const koreaNow = getKoreaNow();
 
   try {
     
@@ -329,6 +332,7 @@ export const knockFriend = async (req, res) => {
         userID: friendUserID,
         type: 'KNOCK',
         content: `${user.nickname}님이 말해요, 피드가 조용해서 심심하대요!`,
+        createdAt: koreaNow,
       }
     });
 
@@ -344,6 +348,7 @@ export const cheerOnFriendFeed = async (req, res) => {
   const userID = req.user.userID; // 인증된 사용자 ID, 토큰에서 추출
   const friendID = req.params.friendId; // URL 파라미터로 받은 친구 ID
   const momentID = req.params.momentId; // URL 파라미터로 받은 피드 ID
+  const koreaNow = getKoreaNow();
 
   try {
     // 모멘트 확인
@@ -391,7 +396,8 @@ export const cheerOnFriendFeed = async (req, res) => {
       data: {
         userID: userID,
         momentID: momentID,
-        cheer: true
+        cheer: true,
+        createdAt: koreaNow,
       }
     });
 
@@ -407,6 +413,7 @@ export const cheerOnFriendFeed = async (req, res) => {
           userID: friend.userID,
           type: 'CHEER',
           content: `${user.nickname}님이 ${friend.nickname}님의 "${moment.content}" 달성을 응원한대요!`,
+          createdAt: koreaNow,
         }
       });
     }
@@ -422,6 +429,7 @@ export const cheerOnFriendFeed = async (req, res) => {
 export const toggleFriendFix = async (req, res) => {
   const userID = req.user.userID; // 현재 사용자 ID
   const { friendUserID } = req.body; // 고정할/고정 해제할 친구의 사용자 ID
+  const koreaNow = getKoreaNow();
 
   try {
     // 친구 관계 확인

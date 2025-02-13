@@ -1,6 +1,12 @@
 import { PrismaClient } from '@prisma/client';
 import moment from 'moment-timezone';
 
+const getKoreaNow = () => {
+  const now = new Date(); // 현재 UTC 기준 시간
+  now.setHours(now.getHours() + 9); // 9시간 추가 (UTC → KST 변환)
+  return now;
+};
+
 const prisma = new PrismaClient();
 
 // 홈 당일 모멘트 조회
@@ -8,6 +14,7 @@ export const getHome = async (req, res) => {
   try {
     // 현재 인증된 사용자 정보 가져오기
     const userID = req.user.userID; // 현재 사용자 ID
+    const koreaNow = getKoreaNow();
 
     // 현재 사용자 조회
     const currentUser = await prisma.user.findUnique({
@@ -21,14 +28,12 @@ export const getHome = async (req, res) => {
       });
     };
     
-    const date = moment().tz("Asia/Seoul").toDate();
-
     // 사용자의 moments 조회 
     const moments = await prisma.moment.findMany({
       where: {
         userID,
-        startDate: { lte: date }, 
-        endDate: { gte: date }      
+        startDate: { lte: koreaNow }, 
+        endDate: { gte: koreaNow }      
       },
       select: {
         momentID: true,
@@ -61,8 +66,8 @@ export const getHome = async (req, res) => {
 export const getCompletedMomentsByWeek = async (req, res) => {
   try {
     const userID = req.user.userID;
-    const now = moment().tz("Asia/Seoul"); 
-    const startOfWeek = now.clone().startOf('isoWeek'); 
+    const koreaNow = getKoreaNow();
+    const startOfWeek = koreaNow.clone().startOf('isoWeek'); 
   
     const weekDates = [];
     for (let i = 0; i < 7; i++) {
@@ -124,6 +129,7 @@ export const getCompletedMomentsByWeek = async (req, res) => {
 export const getConsecutiveCompletedDays = async (req, res) => {
   try {
     const userID = req.user.userID; // 인증된 사용자 ID    
+    const koreaNow = getKoreaNow();
 
     // 현재 사용자 조회
     const currentUser = await prisma.user.findUnique({
@@ -137,11 +143,9 @@ export const getConsecutiveCompletedDays = async (req, res) => {
       });
     }
     
-    const targetDate = moment().tz("Asia/Seoul").toDate();
-
     // 연속된 isCompleted === true인 날짜 개수를 계산
     let consecutiveDays = 1;
-    let checkDate = moment.tz(targetDate, "Asia/Seoul").toDate();
+    let checkDate = moment.tz(koreaNow, "Asia/Seoul").toDate();
     checkDate.setDate(checkDate.getDate() - 1); // 하루 전부터 검사 시작
 
     while (true) {
