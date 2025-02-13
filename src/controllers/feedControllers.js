@@ -89,7 +89,7 @@ export const getFriendFeed = async (req, res) => {
         where: {
           bucketID: bucket.bucketID,
           isCompleted: true,
-          updatedAt: {
+          completedAt: {
             gte: sevenDaysAgo, // 7일 이내만 조회
           },
         },
@@ -97,10 +97,10 @@ export const getFriendFeed = async (req, res) => {
           momentID: true,
           content: true,
           photoUrl: true,
-          updatedAt: true,
+          completedAt: true,
         },
         orderBy: {
-          updatedAt: "desc",
+          completedAt: "desc",
         },
       });      
 
@@ -122,7 +122,7 @@ export const getFriendFeed = async (req, res) => {
           momentContent: moment.content,
           imageUrl: moment.photoUrl,
           frequency: bucket.frequency,
-          date: moment.updatedAt,
+          date: moment.completedAt,
           cheered: friendFeed ? friendFeed.cheer : false, 
         });
       }
