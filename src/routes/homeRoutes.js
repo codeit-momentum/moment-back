@@ -13,7 +13,7 @@ router.get('/consecutiveDays',getConsecutiveCompletedDays);             // 연�
 router.get('/momentsComplete/week', getCompletedMomentsByWeek);         // 일주일 인증 확인 
 
 router.patch('/notifications', getAndMarkNotificationsAsRead);          // 알림 조회 및 읽음 처리 
-router.get('/notifications/unreadCount', getUnreadNotificationsCount);  // 읽지 않은 알림 개수 조회 실패 
+router.get('/notifications/unreadCount', getUnreadNotificationsCount);  // 읽지 않은 알림 개수 조회
 router.delete('/notifications/:notificationID', deleteNotification);    // 알림 삭제 
 
 router.get('/completedBucket', getCompletedBucket);                                    // 버킷리스트 달성 현황 조회 
