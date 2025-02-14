@@ -16,6 +16,6 @@ router.patch('/notifications', getAndMarkNotificationsAsRead);          // 알�
 router.get('/notifications/unreadCount', longPollingNotifications); 
 router.delete('/notifications/:notificationID', deleteNotification);    // 알림 삭제 
 
-router.get('/', getCompletedBucket);                                    // 버킷리스트 달성 현황 조회 
+router.get('/completedBucket', getCompletedBucket);                                    // 버킷리스트 달성 현황 조회 
 
 export default router;
