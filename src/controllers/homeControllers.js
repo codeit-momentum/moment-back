@@ -204,17 +204,18 @@ export const getCompletedBucket = async (req, res) => {
     const totalBuckets = await prisma.bucket.count({
         where: { userID },
     });
-    
+    console.log(totalBuckets);
     // 완료된 버킷 수
     const completedBucketsCount = await prisma.bucket.count({
         where: { userID, isCompleted: true },
     });
+    console.log(completedBucketsCount);
 
     const completionRate = totalBuckets === 0
       ? 0
       : (completedBucketsCount / totalBuckets) * 100;
 
-
+    console.log(completionRate);
     return res.status(200).json({
       success: true,
       completedBucketsCount: completedBucketsCount,
