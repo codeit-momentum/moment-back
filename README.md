@@ -237,7 +237,7 @@
 
 - **전체 배포 주소**: [https://codeit-momentum.shop](https://codeit-momentum.shop)
 - **BackEnd 배포 주소**: [https://api.codeit-momentum.shop](https://api.codeit-momentum.shop)
-- **데모 영상**: 
+- **데모 영상**: https://github.com/codeit-momentum/moment-front
 
 ---
 
