@@ -5,14 +5,167 @@
 모멘텀은 사용자가 신년 계획을 포함한 다양한 목표를 효과적으로 관리하고 성취하도록 돕는 목표 관리 및 성취 지원 서비스입니다. 현실적인 목표 설정과 꾸준한 실행을 통해 성공 경험을 쌓을 수 있도록 설계되었습니다.
 
 
+## 👨‍👩‍👧‍👦팀원
+
+### ProjectManager
+
+<table>
+  <tr>
+    <td>
+      <a href="https://github.com/yunjeee">
+        <img src="https://avatars.githubusercontent.com/u/100953788?v=4" width='150px' />
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align='center'>
+      <a href="https://github.com/yunjeee">
+      PM/팀장<br />
+      이화여자대학교 손윤지
+      </a>
+    </td>
+  </tr>
+</table>
+
+### Designer
+
+<table>
+  <tr>
+    <td>
+      <a href="https://github.com/LucaSeoyoun">
+        <img src="https://avatars.githubusercontent.com/u/101847725?v=4" width='150px' />
+      </a>
+    </td>
+        <td>
+      <a href="https://github.com/jyeon03">
+        <img src="https://avatars.githubusercontent.com/u/147830921?v=4" width='150px' />
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align='center'>
+      <a href="https://github.com/LucaSeoyoun">
+      DS<br />
+      동국대학교 박서연
+      </a>
+    </td>
+    <td align='center'>
+      <a href="https://github.com/jyeon03">
+      DS<br />
+      동국대학교 백지연
+      </a>
+    </td>
+  </tr>
+  
+</table>
+
+### Developer
+
+<table>
+  <tr>
+    <td>
+      <a href="https://github.com/P1su">
+        <img src="https://avatars.githubusercontent.com/u/104068583?v=4" width='150px' />
+      </a>
+    </td>
+        <td>
+      <a href="https://github.com/dh2e">
+        <img src="https://avatars.githubusercontent.com/u/145524046?v=4" width='150px' />
+      </a>
+    </td>
+        <td>
+      <a href="https://github.com/askjiyun">
+        <img src="https://avatars.githubusercontent.com/u/104126233?v=4" width='150px' />
+      </a>
+    </td>
+        <td>
+      <a href="https://github.com/gayeooon">
+        <img src="https://avatars.githubusercontent.com/u/68602093?v=4" width='150px' />
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align='center'>
+      <a href="https://github.com/P1su">
+      Front-end 팀장<br />
+      한국항공대학교 송필수
+      </a>
+    </td>
+        <td align='center'>
+      <a href="https://github.com/dh2e">
+      Front-end<br />
+      덕성여자대학교 권도희
+      </a>
+    </td>
+    <td align='center'>
+      <a href="https://github.com/askjiyun">
+      Front-end<br />
+      성신여자대학교 오지윤
+      </a>
+    </td>
+    <td align='center'>
+      <a href="https://github.com/gayeooon">
+      Front-end<br />
+      홍익대학교 이가연
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <a href="https://github.com/wngml02">
+        <img src="https://avatars.githubusercontent.com/u/94836793?v=4" width='150px' />
+      </a>
+    </td>
+        <td>
+      <a href="https://github.com/kangyeon9525">
+        <img src="https://avatars.githubusercontent.com/u/127291524?v=4" width='150px' />
+      </a>
+    </td>
+        <td>
+      <a href="https://github.com/sanghyeok8473">
+        <img src="https://avatars.githubusercontent.com/u/94914828?v=4" width='150px' />
+      </a>
+    </td>
+        <td>
+      <a href="https://github.com/ydjwls">
+        <img src="https://avatars.githubusercontent.com/u/166782787?v=4" width='150px' />
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align='center'>
+      <a href="https://github.com/wngml02">
+      Back-end 팀장<br />
+      한국외국어대학교 박주희
+      </a>
+    </td>
+        <td align='center'>
+      <a href="https://github.com/kangyeon9525">
+      Back-end<br />
+      한국항공대학교 김강연
+      </a>
+    </td>
+        <td align='center'>
+      <a href="https://github.com/sanghyeok8473">
+      Back-end<br />
+      한국항공대학교 박상혁
+      </a>
+    </td>
+        <td align='center'>
+      <a href="https://github.com/ydjwls">
+      Back-end<br />
+      숙명여자대학교 양어진
+      </a>
+    </td>
+  </tr>
+</table>
+
 ---
 
 ## 📌 기술 스택 (Tech Stack)
+<img src="https://img.shields.io/badge/node.js-5FA04E?style=for-the-badge&logo=node.js&logoColor=white"/> <img src="https://img.shields.io/badge/javascript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=white"/> <img src="https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=Express&logoColor=white"/> <img src="https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=Prisma&logoColor=white"/>
 
-![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=Node.js&logoColor=white)  
-![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=Express&logoColor=white)  
-![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=Prisma&logoColor=white)  
-![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=MongoDB&logoColor=white)  
+<img src="https://img.shields.io/badge/mongodb-47A248?style=for-the-badge&logo=mongodb&logoColor=white"/> <img src="https://img.shields.io/badge/amazonwebservices-232F3E?style=for-the-badge&logo=amazonwebservices&logoColor=white"/> <img src="https://img.shields.io/badge/amazons3-569A31?style=for-the-badge&logo=amazons3&logoColor=white"/> <img src="https://img.shields.io/badge/docker-2496ED?style=for-the-badge&logo=docker&logoColor=white"/>
 ![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=JSON%20web%20tokens&logoColor=white)
 
 - **언어**: Node.js
@@ -87,11 +240,9 @@
 
 ---
 
-## 📞 연락처 (Contact)
 
-- **Email:**
-- **GitHub:**
-
+<h2>지금 바로 모멘텀을 사용해보세요 !</h2>
+<h3><a href='https://www.codeit-momentum.shop/' />💫모멘텀 바로가기</h3>
 
 ---
 
