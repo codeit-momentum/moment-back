@@ -9,7 +9,7 @@ const router = express.Router();
 router.use(jwtMiddleware);
 
 router.get('', getHome);                                                // 홈 당일 모먼트 조회
-router.get('/consecutiveDays',getConsecutiveCompletedDays);             // 연속적으로 인증한 날짜 조회 (작심 N일일)
+router.get('/consecutiveDays', getConsecutiveCompletedDays);             // 연속적으로 인증한 날짜 조회 (작심 N일)
 router.get('/momentsComplete/week', getCompletedMomentsByWeek);         // 일주일 인증 확인 
 
 router.patch('/notifications', getAndMarkNotificationsAsRead);          // 알림 조회 및 읽음 처리 

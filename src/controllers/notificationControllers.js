@@ -11,15 +11,15 @@ export const getUnreadNotificationsCount = async (req, res) => {
       where: { userID },
     });
 
-    if (!currentUser) { 
-      return res.status(404).json({ 
+    if (!currentUser) {
+      return res.status(404).json({
         success: false,
         error: { code: 404, message: '현재 사용자를 찾을 수 없습니다.' }
       });
     }
 
     const unreadNotificationsCount = await prisma.notification.count({
-      where: { userID, isRead: false}
+      where: { userID, isRead: false }
     });
 
     return res.status(200).json({
@@ -30,7 +30,7 @@ export const getUnreadNotificationsCount = async (req, res) => {
     })
   } catch (err) {
     console.error('읽지 않은 알림 개수 조회 실패:', err.message);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       error: { code: 500, message: '읽지 않은 알림 개수 조회에 실패하였습니다.' }
     });
@@ -47,13 +47,13 @@ export const getAndMarkNotificationsAsRead = async (req, res) => {
       where: { userID },
     });
 
-    if (!currentUser) { 
-      return res.status(404).json({ 
+    if (!currentUser) {
+      return res.status(404).json({
         success: false,
         error: { code: 404, message: '현재 사용자를 찾을 수 없습니다.' }
       });
     }
-    
+
     // 사용자의 알림 조회 (최대 8개)
     const notifications = await prisma.notification.findMany({
       where: { userID },
@@ -69,19 +69,19 @@ export const getAndMarkNotificationsAsRead = async (req, res) => {
     });
 
     if (notifications.length > 0) {
-        // 조회한 알림 중 아직 읽지 않은 항목만 읽음 처리
-        const unreadNotificationIds = notifications
-          .filter(notification => !notification.isRead)
-          .map(notification => notification.notificationID);
-  
-        if (unreadNotificationIds.length > 0) {
-          await prisma.notification.updateMany({
-            where: {
-              notificationID: { in: unreadNotificationIds }
-            },
-            data: { isRead: true }
-          });
-        }
+      // 조회한 알림 중 아직 읽지 않은 항목만 읽음 처리
+      const unreadNotificationIds = notifications
+        .filter(notification => !notification.isRead)
+        .map(notification => notification.notificationID);
+
+      if (unreadNotificationIds.length > 0) {
+        await prisma.notification.updateMany({
+          where: {
+            notificationID: { in: unreadNotificationIds }
+          },
+          data: { isRead: true }
+        });
+      }
     }
 
     return res.status(200).json({
@@ -95,7 +95,7 @@ export const getAndMarkNotificationsAsRead = async (req, res) => {
     })
   } catch (err) {
     console.error('알림 조회 및 읽음 처리 실패:', err.message);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       error: { code: 500, message: '알림 조회 및 읽음 처리에 실패하였습니다.' }
     });
@@ -113,9 +113,9 @@ export const deleteNotification = async (req, res) => {
       where: { userID },
     });
 
-    if (!currentUser) { 
+    if (!currentUser) {
       console.error("사용자 찾을 수 없음")
-      return res.status(404).json({ 
+      return res.status(404).json({
         success: false,
         error: { code: 404, message: '현재 사용자를 찾을 수 없습니다.' }
       });
@@ -126,9 +126,9 @@ export const deleteNotification = async (req, res) => {
       where: { notificationID, userID },
     });
 
-    if (!currentNotification) { 
+    if (!currentNotification) {
       console.error("현재 알람 찾을 수 없음")
-      return res.status(404).json({ 
+      return res.status(404).json({
         success: false,
         error: { code: 404, message: '현재 알람을 찾을 수 없습니다.' }
       });
