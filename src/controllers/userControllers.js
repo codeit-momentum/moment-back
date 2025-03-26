@@ -19,7 +19,7 @@ export const getCurrentUser = async (req, res) => {
     // 사용자 정보 반환
     res.status(200).json({
       message: '사용자 프로필 접근 성공',
-      user: currentUser 
+      user: currentUser
     });
   } catch (err) {
     console.error('getCurrentUser 오류:', err.message);
@@ -38,11 +38,11 @@ export const getUserFriendCode = async (req, res) => {
     if (!currentUser) { // 현재 사용자가 없는 경우
       return res.status(404).json({ message: '현재 사용자를 찾을 수 없습니다.' });
     }
-    
+
     // 사용자 정보 반환
     res.status(200).json({
       message: '사용자의 친구 코드 접근 성공',
-      friendCode: currentUser.friendCode 
+      friendCode: currentUser.friendCode
     });
   } catch (err) {
     console.error('getUserFriendCode 오류:', err.message);
@@ -199,7 +199,7 @@ export const deleteUser = async (req, res) => {
   try {
     // 현재 요청한 사용자 조회
     const userID = req.user.userID;
-    
+
 
     // 사용자 삭제 (연관된 데이터 Cascade로 삭제)
     await prisma.$transaction(async (tx) => {
@@ -208,12 +208,12 @@ export const deleteUser = async (req, res) => {
       });
       // 1️⃣ 친구 관계 삭제 (user가 포함된 모든 Friend 관계 삭제)
       await tx.friend.deleteMany({
-          where: {
-              OR: [
-                  { userID: userID },
-                  { friendUserID: userID }
-              ]
-          }
+        where: {
+          OR: [
+            { userID: userID },
+            { friendUserID: userID }
+          ]
+        }
       });
       await tx.friendFeed.deleteMany({
         where: { userID: userID }
@@ -221,19 +221,19 @@ export const deleteUser = async (req, res) => {
 
       // 2️⃣ 모멘트 삭제 (해당 사용자가 생성한 모든 모멘트 삭제)
       await tx.moment.deleteMany({
-          where: { userID: userID }
+        where: { userID: userID }
       });
 
       // 3️⃣ 버킷리스트 삭제 (해당 사용자가 생성한 모든 버킷 삭제)
       await tx.bucket.deleteMany({
-          where: { userID: userID }
+        where: { userID: userID }
       });
 
       // 4️⃣ 사용자 삭제
       await tx.user.delete({
-          where: { userID: userID }
+        where: { userID: userID }
       });
-  });
+    });
 
 
     res.status(200).json({

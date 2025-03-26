@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
-import { refreshAccessToken } from '../controllers/jwtControllers.js';
+import { refreshAccessToken } from '../service/jwtService.js';
 
 const prisma = new PrismaClient();
 

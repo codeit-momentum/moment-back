@@ -18,7 +18,7 @@ export const getFriends = async (req, res) => {
     // 친구 목록 조회
     const friends = await prisma.friend.findMany({
       where: {
-          userID: userID, // 사용자가 친구 관계의 주체인 경우
+        userID: userID, // 사용자가 친구 관계의 주체인 경우
       },
       include: {
         friendUser: {
@@ -149,18 +149,18 @@ export const addFriend = async (req, res) => {
         },
       ],
     });
-    
+
     // 친구 요청한 유저 
     const user = await prisma.user.findUnique({
-      where: { userID : requesterID }
+      where: { userID: requesterID }
     });
 
     // 친구 요청 받은 유저 
     const friend = await prisma.user.findUnique({
-      where: { userID : receiverID }
+      where: { userID: receiverID }
     });
 
-    
+
     // 친구 생성 알림 추가 
     await prisma.notification.createMany({
       data: [
@@ -202,7 +202,7 @@ export const deleteFriend = async (req, res) => {
   if (!friendUserID) {
     return res.status(400).json({ message: '삭제할 친구의 사용자 ID가 필요합니다.' });
   }
-  
+
   try {
     // 친구 관계 확인
     const friendRelation = await prisma.friend.findMany({
@@ -263,7 +263,7 @@ export const knockFriend = async (req, res) => {
   const koreaNow = getKoreaNow();
 
   try {
-    
+
     // 친구 관계 및 최근 피드(모멘트) 정보 검색
     const friendRelation = await prisma.friend.findUnique({
       where: {
@@ -289,13 +289,13 @@ export const knockFriend = async (req, res) => {
       where: { userID: friendUserID }
     });
 
-    
+
     // 친구가 최근 7일 이내에 피드(모멘트)를 올렸는지 확인  -> 내부 확인용
     const sevenDaysAgo = moment().subtract(7, 'days'); // 현재 날짜 기준 7일 전
 
-    const hasRecentCompletedMoment = friendRelation.friendUser.moments.some(momentItem => 
+    const hasRecentCompletedMoment = friendRelation.friendUser.moments.some(momentItem =>
       momentItem.isCompleted === true &&
-      momentItem.updatedAt && 
+      momentItem.updatedAt &&
       moment(new Date(momentItem.updatedAt)).isAfter(sevenDaysAgo)
     );
 
@@ -320,7 +320,7 @@ export const knockFriend = async (req, res) => {
         isKnock: true
       }
     });
-    
+
     // 노크한 유저 
     const user = await prisma.user.findUnique({
       where: { userID }

@@ -7,14 +7,14 @@ const getKoreaNow = () => {
   return now;
 };
 
-const prisma = new PrismaClient(); 
+const prisma = new PrismaClient();
 
 export const getFriendFeed = async (req, res) => {
   try {
     const userID = req.user.userID;
     const friendID = req.params.friendID; // 요청 URL에서 친구 ID 가져오기
     const koreaNow = getKoreaNow();
-    
+
     // 1. 친구 관계 확인
     const friendRelation = await prisma.friend.findMany({
       where: {
@@ -66,7 +66,7 @@ export const getFriendFeed = async (req, res) => {
         frequency: true,
       },
     });
-  
+
     const repeatBuckets = buckets.filter(
       (bucket) => bucket.type !== "ACHIEVEMENT"
     );
@@ -74,8 +74,8 @@ export const getFriendFeed = async (req, res) => {
     // 반복형 버킷리스트가 없을 경우
     if (repeatBuckets.length === 0) {
       return res.status(404).json({
-          success: false,
-          message: "해당 친구의 반복형 버킷리스트가 존재하지 않습니다.",
+        success: false,
+        message: "해당 친구의 반복형 버킷리스트가 존재하지 않습니다.",
       });
     }
 
@@ -101,9 +101,9 @@ export const getFriendFeed = async (req, res) => {
         orderBy: {
           completedAt: "desc",
         },
-      });      
+      });
 
-       // ✅ 사용자가 해당 모멘트에 응원했는지 확인
+      // ✅ 사용자가 해당 모멘트에 응원했는지 확인
       for (const moment of bucketMoments) {
         const friendFeed = await prisma.friendFeed.findFirst({
           where: {
@@ -122,7 +122,7 @@ export const getFriendFeed = async (req, res) => {
           imageUrl: moment.photoUrl,
           frequency: bucket.frequency,
           date: moment.completedAt,
-          cheered: friendFeed ? friendFeed.cheer : false, 
+          cheered: friendFeed ? friendFeed.cheer : false,
         });
       }
     }
